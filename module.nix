@@ -28,9 +28,9 @@ let
     ${pkgs.coreutils}/bin/sleep 0.2
   '';
 
-  # ALIVE is only sent when the box is actually usable. A probe that blocks
-  # (D-state on a dead pool) hangs this loop, which is the right outcome: the
-  # firmware times out and power-cycles.
+  # ALIVE is only sent when the system passes a probe. A probe that blocks
+  # (D-state on a dead pool) hangs this loop; the firmware then times out and
+  # power-cycles, which is the intended outcome.
   heartbeat = pkgs.writeShellScript "nas-power-button-heartbeat" ''
     ${stty}
     exec 3> ${cfg.port}
@@ -114,8 +114,8 @@ in
       }
     ];
 
-    # Reset after panic is left at 0: the PCH cannot reboot anyway, and a
-    # panicked kernel is silent on the serial port, which is the whole point.
+    # kernel.panic stays 0. The PCH cannot reboot, and a panicked kernel is
+    # silent on the serial port, which is the signal the firmware waits for.
     boot.kernel.sysctl = lib.mkIf cfg.panicOnHang {
       "kernel.panic_on_oops" = 1;
       "kernel.softlockup_panic" = 1;

@@ -33,12 +33,46 @@
           '';
           mkFlash = name: fw: pkgs.writeShellApplication {
             inherit name;
-            runtimeInputs = [ pkgs.avrdude ];
+            runtimeInputs = [ pkgs.avrdude pkgs.coreutils ];
+            # A running sketch's CDC port is not the bootloader: opening it at
+            # 1200 bps makes Caterina reset into the loader (8 s window). The
+            # loader comes back under the same ttyACM name within ~0.1 s, so
+            # it is found by USB id, not by a new port name. No reaction (dead
+            # or unflashed sketch): fall back to a manual double RST.
             text = ''
               port=''${1:-/dev/ttyACM0}
-              echo "Short RST to GND twice, then waiting for the bootloader on $port"
-              for _ in $(seq 80); do [ -e "$port" ] && break; sleep 0.1; done
-              avrdude -p atmega32u4 -c avr109 -P "$port" -b 57600 -D \
+              # Caterina ids: Arduino Leonardo loader, SparkFun Pro Micro 5V/3V3.
+              is_loader() {
+                d=/sys/class/tty/''${1##*/}/device/..
+                [ -r "$d/idVendor" ] || return 1
+                case "$(cat "$d/idVendor"):$(cat "$d/idProduct")" in
+                  2341:0036|2a03:0036|1b4f:9205|1b4f:9203) return 0 ;;
+                esac
+                return 1
+              }
+              find_loader() {
+                for _ in $(seq "$1"); do
+                  for p in /dev/ttyACM*; do
+                    [ -e "$p" ] && is_loader "$p" && { echo "$p"; return 0; }
+                  done
+                  sleep 0.1
+                done
+                return 1
+              }
+              loader=$(find_loader 1 || true)
+              if [ -z "$loader" ] && [ -e "$port" ]; then
+                echo "1200 bps touch on $port"
+                stty -F "$port" 1200 || true
+                loader=$(find_loader 50 || true)
+              fi
+              if [ -z "$loader" ]; then
+                echo "no bootloader: short RST to GND twice now"
+                loader=$(find_loader 150 || true)
+              fi
+              [ -n "$loader" ] || { echo "no bootloader appeared"; exit 1; }
+              echo "bootloader on $loader"
+              sleep 0.3
+              avrdude -p atmega32u4 -c avr109 -P "$loader" -b 57600 -D \
                 -U flash:w:${fw}/firmware.hex:i
             '';
           };
