@@ -2,10 +2,26 @@
 
 Два этапа: сначала реле-плата (полярность кнопки не важна, ошибка ничего не
 сожжёт), потом то же самое на BC547 — это финальная схема, её потом паяем.
-Схемы: poc/wiring.svg и final/wiring.svg
-Раскладка макетки в Fritzing: `fizzel-poc` / `fizzel-final` в devshell
-(открывает docs/poc/bench.fzz и docs/final/bench.fzz).
-Колонки/ряды на картинке — предложение, не обязательство: важны цепи.
+Схемы: [poc/wiring.svg](poc/wiring.svg) и [final/wiring.svg](final/wiring.svg).
+Раскладка макетки — `fizzel-poc` / `fizzel-final` (см. ниже). Колонки/ряды
+на картинке — предложение, не обязательство: важны цепи.
+
+## Команды devshell
+
+Всё ниже — из корня репы, внутри `nix develop` (или `direnv allow` один раз).
+
+| команда | что делает |
+|---|---|
+| `flash-relay [port]` | собрать и прошить прошивку этапа A (pin 4 active LOW) |
+| `flash-transistor [port]` | то же для этапа B (pin 4 active HIGH) |
+| `fizzel-poc` | открыть `docs/poc/bench.fzz` в Fritzing |
+| `fizzel-final` | открыть `docs/final/bench.fzz` в Fritzing |
+| `picocom -b 115200 --omap crlf --echo /dev/ttyACM0` | консоль к Pro Micro |
+| `d2 docs/poc/wiring.d2 docs/poc/wiring.svg` | перерисовать схему после правки `.d2` |
+| `nix flake check` | sim прошивки, NixOS VM, Fritzing-lint макеток |
+| `nix build .#bench-fzz` | перегенерировать `bench.fzz` из `fritzing/gen.py` |
+
+`port` по умолчанию `/dev/ttyACM0`. `avrdude` тоже в шелле, если надо руками.
 
 ## Детали
 
@@ -29,20 +45,30 @@ BC547: плоской стороной с надписью к себе, ноги
 ## 0. Прошивка (один раз на этап)
 
 ```
-cd /srv/workspace/projects/nas-power-button
-nix run .#flash-relay -- /dev/ttyACM1        # этап A
-nix run .#flash-transistor -- /dev/ttyACM1   # этап B
+flash-relay          # этап A
+flash-transistor     # этап B
 ```
 
-Когда попросит — дважды замкни RST на GND. Порт: первая Pro Micro (PS/2)
-обычно ttyACM0, вторая — ttyACM1; проверь `ls /dev/ttyACM*` до и после
-подключения.
+Скрипт сам переводит плату в загрузчик: открывает порт на 1200 бод, Caterina
+сбрасывается и на ~8 с появляется как `2341:0036`, туда и льётся
+(`bootloader on /dev/ttyACM0`). RST трогать не надо. Если на плате нет
+живого скетча (пустая или битая прошивка), скрипт напишет
+`no bootloader: short RST to GND twice now` — тогда дважды коротко замкни
+RST на GND, у тебя 15 с.
+
+`Permission denied` на `/dev/ttyACM0` — пользователь не в группе `dialout`
+в текущей сессии: перелогиниться или `sg dialout -c 'flash-relay'`.
+Порт: `ls /dev/ttyACM*` до и после подключения, если их несколько.
 
 Консоль для всех тестов:
 
 ```
-nix develop -c picocom -b 115200 --omap crlf --echo /dev/ttyACM1
+picocom -b 115200 --omap crlf --echo /dev/ttyACM0
 ```
+
+После прошивки Pro Micro перечисляется заново — picocom запускать уже после
+`flash-*`, а перед следующей прошивкой закрыть (Ctrl-A Ctrl-X), иначе
+1200-бодный сброс не пройдёт.
 
 Команды (Enter в конце): `PING` → `pong` (кнопку не трогает), `PRESS`
 (0,3 с), `HOLD` (6 с), `POWEROFF`, `REBOOT`, `STATUS` (состояние
@@ -72,7 +98,7 @@ Relay_JMP: перемычка на CH1 (IN_CH1–P25) обязательна. П
 
 ### A2. Инвертор (RS-232 → TTL)
 
-На макетке, по schematic-test.png:
+На макетке, по poc/wiring.svg:
 
 1. Q1 BC547 в макетку, три ноги в три разных столбца.
 2. R1 10k: свободный столбец («вход SOUT») → база Q1.
@@ -134,7 +160,7 @@ POWEROFF/REBOOT/DISARM и после своего срабатывания. По
 
 ## Этап B — BC547 вместо реле (финальная схема)
 
-Реле-плату снять. Прошить `flash-transistor`.
+Реле-плату снять. `flash-transistor`.
 
 ### B1. Найти «горячий» пин PWR SW
 
@@ -142,7 +168,7 @@ NAS под питанием (стоит, выключен). Мультиметр
 корпус/винт платы, «+» по очереди на JFP1 pin 6 и pin 8. Где ≈ 3,3 V — тот
 «горячий», второй ≈ 0 V (земля). Записать.
 
-### B2. Ключ на макетке (по schematic-final.png)
+### B2. Ключ на макетке (по final/wiring.svg)
 
 1. Q2 BC547 в три свободных столбца.
 2. R3 2.2k: Pro Micro pin 4 → база Q2.
