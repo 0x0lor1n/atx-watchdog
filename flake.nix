@@ -142,6 +142,19 @@
             pkgs.picocom
             pkgs.d2
           ];
+          shellHook = ''
+            cat <<'HELP'
+nas-power-button devshell
+  flash-relay [port]        PoC firmware, relay board   (pin 4 active LOW)
+  flash-transistor [port]   final firmware, BC547       (pin 4 active HIGH)
+  fizzel-poc                docs/poc/bench.fzz   in Fritzing
+  fizzel-final              docs/final/bench.fzz in Fritzing
+  picocom -b 115200 --omap crlf --echo /dev/ttyACM0
+  d2 docs/<stage>/wiring.d2 docs/<stage>/wiring.svg
+  nix flake check           sim + NixOS VM + Fritzing lint
+  nix build .#bench-fzz     regenerate bench.fzz from fritzing/gen.py
+HELP
+          '';
         };
       });
 
