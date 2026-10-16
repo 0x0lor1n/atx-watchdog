@@ -95,6 +95,13 @@
             python3 ${./fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
           '';
 
+          # docs/<stage>/schematic.svg is tracked; this regenerates it from schematic/<stage>.py.
+          schematic = pkgs.runCommand "nas-power-button-schematic"
+            { nativeBuildInputs = [ (pkgs.python3.withPackages (p: [ p.schemdraw ])) ]; } ''
+            mkdir -p $out/poc
+            python3 ${./schematic}/poc.py $out/poc/schematic.svg
+          '';
+
           fizzel-poc = mkFizzel "poc";
           fizzel-final = mkFizzel "final";
           default = firmware-relay;
@@ -145,6 +152,7 @@ nas-power-button devshell
   d2 docs/<stage>/wiring.d2 docs/<stage>/wiring.svg
   nix flake check           sim + NixOS VM + Fritzing lint
   nix build .#bench-fzz     regenerate bench.fzz from fritzing/gen.py
+  nix build .#schematic     regenerate docs/poc/schematic.svg from schematic/poc.py
 HELP
           '';
         };

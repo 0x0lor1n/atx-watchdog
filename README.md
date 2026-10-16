@@ -14,8 +14,9 @@ the Pro Micro's `Serial1`. A NixOS module sends `POWEROFF`/`REBOOT` from
 shutdown hooks and `ALIVE` once a minute; the firmware shorts PWR SW
 (relay board in the proof of concept, a BC547 in the final build) and
 power-cycles the box on its own if `ALIVE` stops. See
-[docs/poc/wiring.svg](docs/poc/wiring.svg),
-[docs/final/wiring.svg](docs/final/wiring.svg),
+[docs/poc/schematic.svg](docs/poc/schematic.svg) (schemdraw),
+[docs/poc/wiring.svg](docs/poc/wiring.svg) and
+[docs/final/wiring.svg](docs/final/wiring.svg) (d2, bench wiring),
 [docs/BENCH.md](docs/BENCH.md).
 
 ## Install
@@ -30,6 +31,7 @@ fizzel-poc             # breadboard layout in Fritzing: docs/poc/bench.fzz
 fizzel-final           #                                docs/final/bench.fzz
 picocom -b 115200 --omap crlf --echo /dev/ttyACM0
 nix flake check        # firmware sim, NixOS VM, Fritzing lint
+nix build .#schematic  # regenerate docs/poc/schematic.svg from schematic/poc.py
 ```
 
 NAS side: import `nixosModules.default`, see `module.nix`.
@@ -54,7 +56,8 @@ COM port on `poweroff`, `reboot` and a stopped heartbeat.
 ```
 firmware/poc/      sketch (one source, two builds: relay / transistor)
 module.nix         NixOS module: heartbeat, shutdown hooks, panic sysctls
-docs/poc/          wiring.d2 + svg, bench.fzz   (Waveshare relay board)
+docs/poc/          schematic.svg, wiring.d2 + svg, bench.fzz   (Waveshare relay board)
+schematic/         schemdraw sources for docs/*/schematic.svg
 docs/final/        wiring.d2 + svg, bench.fzz   (BC547)
 docs/schemas/      vendor schematics: Pro Micro, RPi Relay Board
 docs/BENCH.md      step-by-step bench procedure
