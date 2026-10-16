@@ -1,0 +1,11 @@
+# gitleaks: default rules plus the one below. Author identity for this repo is
+# 0x0lor1n; the rule that knows the real names lives outside the repo
+# (~/.config/gitleaks/personal.toml, see lefthook.yml), because a regex that
+# lists them is itself the leak.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "home-path"
+description = "Absolute home directory paths"
+regex = '''/home/[a-z][a-z0-9_.@-]+/'''

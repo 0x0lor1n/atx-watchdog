@@ -713,7 +713,7 @@ def bench_relay(parts):
         400,
         240,
         "Этап A (BENCH.md A1–A3), прошивка flash-relay.\n"
-        "Pro Micro питается по USB от laptop.\n"
+        "Pro Micro питается по USB от ноутбука.\n"
         "Реле-плата: гнёзда 1 (3V3) и 2 (5V) на «+»,\n"
         "6 (GND) на «−», 37 (CH1) на Pro Micro 4.\n"
         "Без гнезда 1 оптопара не питается, реле молчит.\n"

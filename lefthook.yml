@@ -6,6 +6,8 @@ glob_matcher: doublestar
 
 pre-commit:
   jobs:
+    - name: gitleaks
+      run: gitleaks git --staged --no-banner --redact --config .gitleaks.toml
     - name: nixfmt
       glob: "**/*.nix"
       stage_fixed: true

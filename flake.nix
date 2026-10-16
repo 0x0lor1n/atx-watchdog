@@ -170,6 +170,7 @@
             (python pkgs)
             # git hooks; lefthook.yml takes the tools from PATH
             pkgs.lefthook
+            pkgs.gitleaks
             pkgs.nixfmt
             pkgs.deadnix
             pkgs.statix
