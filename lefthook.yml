@@ -1,0 +1,34 @@
+# Tools come from the devshell PATH (flake.nix devShells.default).
+# Sequential: a fixer and the linter of the same file type must not race,
+# and parallel `stage_fixed` would fight over .git/index.lock.
+no_auto_install: true
+glob_matcher: doublestar
+
+pre-commit:
+  jobs:
+    - name: nixfmt
+      glob: "**/*.nix"
+      stage_fixed: true
+      run: nixfmt {staged_files}
+    - name: deadnix
+      glob: "**/*.nix"
+      run: deadnix --fail {staged_files}
+    - name: statix
+      glob: "**/*.nix"
+      run: statix check
+
+    - name: ruff-format
+      glob: "**/*.py"
+      stage_fixed: true
+      run: ruff format {staged_files}
+    - name: ruff
+      glob: "**/*.py"
+      run: ruff check {staged_files}
+
+    - name: clang-format
+      glob: "**/*.{ino,cpp,h}"
+      stage_fixed: true
+      run: clang-format -i {staged_files}
+    - name: cppcheck
+      glob: "**/*.{ino,cpp,h}"
+      run: cppcheck --language=c++ --enable=warning,style --error-exitcode=1 --inline-suppr -DARDUINO {staged_files}

@@ -1,0 +1,10 @@
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "SIM", "RUF"]
+# E731: small lambdas are fine. E501: ruff format wraps what it can; the long
+# lines left are Fritzing part ids and literal notes. RUF001: those notes are
+# Russian and use typographic dashes on purpose.
+ignore = ["E731", "E501", "RUF001"]
