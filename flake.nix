@@ -178,20 +178,21 @@
             pkgs.cppcheck
           ];
           shellHook = ''
-                        lefthook install >/dev/null || echo "lefthook install failed; git hooks not installed" >&2
-                        cat <<'HELP'
-            nas-power-button devshell
-              flash-relay [port]        PoC firmware, relay board   (pin 4 active LOW)
-              flash-transistor [port]   final firmware, BC547       (pin 4 active HIGH)
-              fizzel-poc                docs/poc/bench.fzz   in Fritzing
-              fizzel-final              docs/final/bench.fzz in Fritzing
-              picocom -b 115200 --omap crlf --echo /dev/ttyACM0
-              d2 docs/<stage>/wiring.d2 docs/<stage>/wiring.svg
-              nix flake check           sim + NixOS VM + Fritzing lint
-              nix build .#bench-fzz     regenerate bench.fzz from fritzing/gen.py
-              nix build .#schematic     regenerate docs/poc/schematic.svg from schematic/poc.py
-              lefthook run pre-commit   what the commit hook runs (nixfmt, deadnix, statix, ruff, clang-format, cppcheck)
-            HELP
+                                  lefthook install >/dev/null || echo "lefthook install failed; git hooks not installed" >&2
+                                  cat <<'HELP'
+                      nas-power-button devshell
+                        flash-relay [port]        PoC firmware, relay board   (pin 4 active LOW)
+                        flash-transistor [port]   final firmware, BC547       (pin 4 active HIGH)
+                        fizzel-poc                docs/poc/bench.fzz   in Fritzing
+                        fizzel-final              docs/final/bench.fzz in Fritzing
+                        picocom -b 115200 --omap crlf --echo /dev/ttyACM0
+                        d2 docs/<stage>/wiring.d2 docs/<stage>/wiring.svg
+                        nix flake check           sim + NixOS VM + Fritzing lint
+                        nix build .#bench-fzz     regenerate bench.fzz from fritzing/gen.py
+                        nix build .#schematic     regenerate docs/poc/schematic.svg from schematic/poc.py
+                        lefthook run pre-commit   what the commit hook runs (nixfmt, deadnix, statix, ruff, clang-format, cppcheck)
+            lefthook run pre-push     what the push hook runs (nix flake check)
+                      HELP
           '';
         };
       });

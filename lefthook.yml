@@ -32,3 +32,10 @@ pre-commit:
     - name: cppcheck
       glob: "**/*.{ino,cpp,h}"
       run: cppcheck --language=c++ --enable=warning,style --error-exitcode=1 --inline-suppr -DARDUINO {staged_files}
+
+# Slow part: firmware sim, NixOS VM, Fritzing lint. Minutes when the VM is
+# cold, so it guards the push, not every commit.
+pre-push:
+  jobs:
+    - name: nix flake check
+      run: nix flake check

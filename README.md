@@ -34,8 +34,9 @@ nix flake check        # firmware sim, NixOS VM, Fritzing lint
 nix build .#schematic  # regenerate docs/poc/schematic.svg from schematic/poc.py
 ```
 
-Entering the shell installs the git hooks (lefthook.yml): nixfmt, deadnix,
-statix, ruff, clang-format, cppcheck on staged files.
+Entering the shell installs the git hooks (lefthook.yml). pre-commit: nixfmt,
+deadnix, statix, ruff, clang-format, cppcheck on staged files. pre-push:
+`nix flake check`.
 
 NAS side: import `nixosModules.default`, see `module.nix`.
 
