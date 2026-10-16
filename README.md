@@ -3,13 +3,13 @@
 A hardware watchdog and remote power button for a home NAS, built on a
 SparkFun Pro Micro. Personal project.
 
-**Why.** A short on the PSU killed the USB Controller of the mother and broke the
+**Why.** A short on the PSU killed the USB controller of the motherboard and broke the
 handling of the power-off signal: the OS halts, the board stays on, and the
 only remedy is a finger on the case button. The board still has a working
 COM header (JCOM1) and the front-panel PWR SW pins (JFP1), which is enough:
 a microcontroller listens on the COM port and presses the button.
 
-**How.** JCOM1 TX e goes through a one-transistor RS-232→TTL inverter into
+**How.** JCOM1 TX goes through a one-transistor RS-232→TTL inverter into
 the Pro Micro's `Serial1`. A NixOS module sends `POWEROFF`/`REBOOT` from
 shutdown hooks and `ALIVE` once a minute; the firmware shorts PWR SW
 (relay board in the proof of concept, a BC547 in the final build) and

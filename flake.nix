@@ -15,7 +15,7 @@
       packages = forAll (pkgs:
         let
           core = "${pkgs.arduino-core-unwrapped}/share/arduino";
-          # Pro Micro 5 V/16 MHz runs the Leonardo build unchanged (same MCU, Caterina loader).
+          # Leonardo build: same MCU and Caterina loader as the Pro Micro 5 V.
           mkFirmware = name: extraFlags: pkgs.runCommand "nas-power-button-${name}" { } ''
             mkdir -p build sketch/firmware $out
             cp ${./firmware/poc/firmware.ino} sketch/firmware/firmware.ino
@@ -34,14 +34,11 @@
           mkFlash = name: fw: pkgs.writeShellApplication {
             inherit name;
             runtimeInputs = [ pkgs.avrdude pkgs.coreutils ];
-            # A running sketch's CDC port is not the bootloader: opening it at
-            # 1200 bps makes Caterina reset into the loader (8 s window). The
-            # loader comes back under the same ttyACM name within ~0.1 s, so
-            # it is found by USB id, not by a new port name. No reaction (dead
-            # or unflashed sketch): fall back to a manual double RST.
+            # 1200 bps touch resets Caterina into its loader (8 s window); the loader
+            # re-enumerates under the same ttyACM name, so match by USB id instead.
             text = ''
               port=''${1:-/dev/ttyACM0}
-              # Caterina ids: Arduino Leonardo loader, SparkFun Pro Micro 5V/3V3.
+              # Leonardo loader, Pro Micro 5V, Pro Micro 3V3
               is_loader() {
                 d=/sys/class/tty/''${1##*/}/device/..
                 [ -r "$d/idVendor" ] || return 1
@@ -76,7 +73,6 @@
                 -U flash:w:${fw}/firmware.hex:i
             '';
           };
-          # Opens a bench sketch in Fritzing. Edits land in docs/<stage>/bench.fzz
           # (tracked); `nix build .#bench-fzz` regenerates both from gen.py.
           mkFizzel = stage: pkgs.writeShellApplication {
             name = "fizzel-${stage}";
@@ -88,16 +84,12 @@
           };
         in
         rec {
-          # Pin 4 active LOW: Waveshare relay board.
           firmware-relay = mkFirmware "relay" "";
-          # Pin 4 active HIGH: BC547 switching PWR SW.
           firmware-transistor = mkFirmware "transistor" "-DBUTTON_ACTIVE_HIGH";
 
           flash-relay = mkFlash "flash-relay" firmware-relay;
           flash-transistor = mkFlash "flash-transistor" firmware-transistor;
 
-          # Bench layouts for Fritzing (BENCH.md A and B). gen.py fails the build
-          # if a pin misses its hole or a net differs from the schematic.
           bench-fzz = pkgs.runCommand "nas-power-button-bench-fzz"
             { nativeBuildInputs = [ pkgs.python3 ]; } ''
             python3 ${./fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
@@ -160,7 +152,6 @@ HELP
 
       checks = forAll (pkgs:
         let
-          # Firmware logic on the host: same .ino, fake Arduino, virtual clock.
           sim = name: flags: pkgs.runCommandCC "sim-${name}" { } ''
             mkdir -p test firmware/poc
             cp ${./firmware/poc/firmware.ino} firmware/poc/firmware.ino
@@ -172,10 +163,8 @@ HELP
         {
           sim-relay = sim "relay" "";
           sim-transistor = sim "transistor" "-DBUTTON_ACTIVE_HIGH";
-          # NAS side in a real shutdown: what reaches the COM port.
           vm = pkgs.testers.runNixOSTest (import ./test/vm.nix self);
-          # Bench sketches as Fritzing draws them (not as gen.py meant them),
-          # plus proof that the lint catches pins moved off their holes.
+          # Lints what Fritzing saved, not what gen.py placed: the two differ after a GUI edit.
           bench-lint = pkgs.runCommand "bench-lint"
             { nativeBuildInputs = [ pkgs.python3 ]; } ''
             export HOME=$PWD/home QT_QPA_PLATFORM=offscreen

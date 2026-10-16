@@ -1,6 +1,4 @@
-// Host-side tests for firmware.ino: the sketch is compiled unchanged against a
-// fake Arduino with a virtual millis() clock, and every button edge is
-// recorded with its timestamp.
+// firmware.ino against a fake Arduino core with a virtual millis().
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -65,7 +63,6 @@ static int failures;
     }                                                                    \
   } while (0)
 
-// Presses since the last reset, as (start, length) pairs.
 struct Press {
   unsigned long at, len;
 };
@@ -87,10 +84,9 @@ static void boot(unsigned long start = 0) {
   com.len = usb.len = 0;
   com.overlong = usb.overlong = false;
   setup();
-  edges.clear();  // only edges after setup matter
+  edges.clear();
 }
 
-// Run loop() for `ms` of virtual time in 100 ms steps.
 static void run_for(unsigned long ms) {
   unsigned long end = now_ms + ms;
   while ((long)(end - now_ms) > 0) {
@@ -128,8 +124,8 @@ int main() {
 
   test("a half line before the hook's leading newline is flushed", [] {
     boot();
-    Serial1.send("junk-from-boot");      // no newline
-    Serial1.send("\nPOWEROFF\n");        // what module.nix writes
+    Serial1.send("junk-from-boot");
+    Serial1.send("\nPOWEROFF\n");
     run_for(20000);
     CHECK(presses().size() == 1);
   });
@@ -186,7 +182,7 @@ int main() {
     unsigned long alive_at = now_ms - 100;
     run_for(4 * WATCHDOG_MS);
     auto p = presses();
-    CHECK(p.size() == 2);  // hold + power-on, and no second cycle
+    CHECK(p.size() == 2);
     if (p.size() == 2) {
       CHECK(p[0].len == HOLD_MS && p[1].len == PRESS_MS);
       CHECK(p[0].at - alive_at >= WATCHDOG_MS);
@@ -197,9 +193,9 @@ int main() {
   test("watchdog re-arms after the NAS boots and sends ALIVE again", [] {
     boot();
     Serial1.send("ALIVE\n");
-    run_for(WATCHDOG_MS + 20000);       // first fire
-    Serial1.send("ALIVE\n");            // NAS came back
-    run_for(WATCHDOG_MS + 20000);       // hung again
+    run_for(WATCHDOG_MS + 20000);
+    Serial1.send("ALIVE\n");
+    run_for(WATCHDOG_MS + 20000);
     CHECK(presses().size() == 4);
   });
 
@@ -222,8 +218,8 @@ int main() {
   });
 
   test("watchdog survives the 49-day millis() wrap", [] {
-    boot(0xFFFFFFFFUL - 90000);         // 90 s before the wrap
-    for (int i = 0; i < 4; i++) {       // ALIVE across the wrap
+    boot(0xFFFFFFFFUL - 90000);
+    for (int i = 0; i < 4; i++) {
       Serial1.send("ALIVE\n");
       run_for(60000);
     }
@@ -234,7 +230,7 @@ int main() {
 
   test("USB commands work without a USB host attached", [] {
     boot();
-    Serial.connected = false;           // standalone on 5VSB
+    Serial.connected = false;
     Serial1.send("\nPOWEROFF\n");
     run_for(20000);
     CHECK(presses().size() == 1);

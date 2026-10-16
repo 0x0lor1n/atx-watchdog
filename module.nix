@@ -1,15 +1,5 @@
-# NAS side of the Pro Micro power button on JCOM1.
-#
-# The board hangs after "reboot: Power down", so the Pro Micro holds PWR SW
-# once we are past the point of no return: a hook in the shutdown ramfs, which
-# systemd-shutdown runs after every filesystem is unmounted, right before the
-# final reboot(2), with argv[1] = poweroff | reboot | halt | kexec. halt and
-# kexec are left alone.
-#
-# The hardware watchdog resets through the same broken PCH path, so hangs are
-# caught by the Pro Micro too: a service sends ALIVE every heartbeatInterval
-# and the firmware power-cycles the NAS after 5 min of silence. Stopping the
-# service sends DISARM, so a manual stop or a slow shutdown is never cut short.
+# NAS side of the Pro Micro power button on JCOM1: POWEROFF/REBOOT from a
+# system-shutdown hook, ALIVE from a heartbeat service, DISARM on its stop.
 { config, lib, pkgs, ... }:
 let
   cfg = config.services.nas-power-button;
@@ -22,15 +12,13 @@ let
       *) exit 0 ;;
     esac
     ${stty} || exit 0
-    # Leading newline flushes any half line the receiver may hold.
+    # The leading newline ends whatever partial line the firmware is holding.
     printf '\n%s\n' "$cmd" > ${cfg.port}
-    # 10 bytes at 9600 baud is ~10 ms; give the UART time to drain.
+    # the UART needs ~10 ms to drain 10 bytes at 9600 baud
     ${pkgs.coreutils}/bin/sleep 0.2
   '';
 
-  # ALIVE is only sent when the system passes a probe. A probe that blocks
-  # (D-state on a dead pool) hangs this loop; the firmware then times out and
-  # power-cycles, which is the intended outcome.
+  # A probe stuck in D-state hangs this loop; the firmware times out and power-cycles, as intended.
   heartbeat = pkgs.writeShellScript "nas-power-button-heartbeat" ''
     ${stty}
     exec 3> ${cfg.port}
@@ -114,8 +102,7 @@ in
       }
     ];
 
-    # kernel.panic stays 0. The PCH cannot reboot, and a panicked kernel is
-    # silent on the serial port, which is the signal the firmware waits for.
+    # kernel.panic stays 0: the PCH cannot reboot, and a silent kernel is what the firmware acts on.
     boot.kernel.sysctl = lib.mkIf cfg.panicOnHang {
       "kernel.panic_on_oops" = 1;
       "kernel.softlockup_panic" = 1;
@@ -123,13 +110,13 @@ in
       "kernel.hung_task_timeout_secs" = lib.mkDefault 120;
     };
 
-    # NixOS builds systemd with SYSTEM_SHUTDOWN_PATH=/etc/systemd/system-shutdown.
+    # NixOS systemd: SYSTEM_SHUTDOWN_PATH=/etc/systemd/system-shutdown
     systemd.shutdownRamfs.contents."/etc/systemd/system-shutdown/nas-power-button".source = hook;
 
     systemd.services.nas-power-button-heartbeat = lib.mkIf cfg.heartbeat {
       description = "Heartbeat to the Pro Micro power button";
       wantedBy = [ "multi-user.target" ];
-      # Only "up" once the system is: a NAS stuck in early boot stays disarmed.
+      # A NAS stuck in early boot never arms the watchdog.
       after = [ "multi-user.target" ];
       serviceConfig = {
         ExecStart = heartbeat;

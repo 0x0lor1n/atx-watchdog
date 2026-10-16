@@ -1,5 +1,4 @@
-# The NAS side in a VM: a QEMU serial port is captured to a file in the
-# machine's state dir and checked after each real shutdown.
+# module.nix in a VM; the QEMU serial port stands in for JCOM1.
 self:
 { ... }:
 {
@@ -15,8 +14,7 @@ self:
       probeTimeout = 1;
     };
     systemd.tmpfiles.rules = [ "d /probe 0755 root root -" ];
-    # qemu.options come before the driver's own "-serial stdio", so this is
-    # ttyS0 (the "JCOM1") and the driver's console moves to ttyS1.
+    # Listed before the test driver's own -serial, so this one is ttyS0.
     virtualisation.qemu.options = [
       "-chardev file,id=jcom1,path=jcom1.log,append=on"
       "-serial chardev:jcom1"
@@ -27,9 +25,7 @@ self:
     import time
 
     jcom1 = nas.state_dir / "jcom1.log"
-    # The test VM also has console=ttyS0, so kernel and systemd logs share the
-    # port, as they would with a serial console on the NAS. Like the firmware,
-    # look only at whole lines that are exactly a command word.
+    # console=ttyS0 shares the port, so match whole lines only, like the firmware.
     WORDS = {"ALIVE", "DISARM", "POWEROFF", "REBOOT"}
 
     def lines():
@@ -41,7 +37,7 @@ self:
     def words(start):
         return [l.strip("\r") for l in lines()[start:] if l.strip("\r") in WORDS]
 
-    # Without allow_reboot QEMU runs with -no-reboot and exits on reboot.
+    # allow_reboot: the driver passes -no-reboot otherwise
     nas.start(allow_reboot=True)
     nas.wait_for_unit("nas-power-button-heartbeat.service")
 
@@ -57,7 +53,7 @@ self:
 
     with subtest("an unwritable probe dir withholds ALIVE"):
         nas.succeed("mount -t tmpfs -o ro tmpfs /probe")
-        time.sleep(5)  # let the in-flight beat land
+        time.sleep(5)
         start = mark()
         time.sleep(10)
         assert "ALIVE" not in words(start), words(start)

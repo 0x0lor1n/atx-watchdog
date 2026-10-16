@@ -39,7 +39,7 @@ BC547: плоской стороной с надписью к себе, ноги
 
 - Верхняя «+» = 5 V, верхняя «−» = GND.
 - Pro Micro VCC → «+», Pro Micro GND → «−».
-- Пока стенд на столе — питание по USB от laptop. В NAS — 5VSB с ATX pin 9
+- Пока стенд на столе — питание по USB от ноутбука. В NAS — 5VSB с ATX pin 9
   на «+», а USB не подключать одновременно с 5VSB.
 
 ## 0. Прошивка (один раз на этап)
@@ -132,9 +132,9 @@ NAS обесточен (выключатель на БП). Кнопку корп
    sudo stty -F /dev/ttyS0 9600 cs8 -cstopb -parenb raw -echo
    printf '\nPING\n' | sudo tee /dev/ttyS0
    ```
-   В picocom на laptop: `com: PING` и `pong`.
+   В picocom на ноутбуке: `com: PING` и `pong`.
 5. `HOLD` из picocom на зависшем после poweroff NAS → гаснет.
-6. Модуль в ~/nix-nvme (делаю я) → `sudo nixos-rebuild boot` → загрузиться
+6. Подключить `nixosModules.default` в конфиг NAS → `sudo nixos-rebuild boot` → загрузиться
    → `sudo poweroff`. В picocom: `com: POWEROFF`, через ~9 с NAS гаснет.
    Потом `sudo reboot`: гаснет и включается сам.
 

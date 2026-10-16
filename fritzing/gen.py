@@ -38,9 +38,6 @@ P = 9.0           # 0.1 in in scene px
 MM = 90 / 25.4
 
 
-# --------------------------------------------------------------------------
-# Generated parts
-# --------------------------------------------------------------------------
 
 def _svg(w, h, body):
     return (f'<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -234,9 +231,6 @@ def msi_header(module_id, title, names, desc, odd_on_top):
     return p
 
 
-# --------------------------------------------------------------------------
-# Sketch model
-# --------------------------------------------------------------------------
 
 class Inst:
     def __init__(self, sk, module_id, title, path, size, pins, legs=None, props=None):
@@ -317,7 +311,6 @@ class Sketch:
         self.svgids[title] = ids
         return Inst(self, module_id, title, module_id + ".fzp", size, pins)
 
-    # ---- connections ----
     def plug(self, inst, c, hole):
         """inst's connector c sits in a breadboard hole; it must already be there."""
         (x, y), (hx, hy) = inst.pin_scene(c), self.hole(hole)
@@ -349,7 +342,6 @@ class Sketch:
     def note(self, x, y, w, h, text):
         self.notes.append((self.next_index(), x, y, w, h, text))
 
-    # ---- nets ----
     def nets(self):
         """Union-find over plugs, wires and breadboard strips/rails."""
         parent = {}
@@ -400,7 +392,6 @@ class Sketch:
                 raise SystemExit(f"nets {seen[k]} and {name} are shorted")
             seen[k] = name
 
-    # ---- output ----
     @staticmethod
     def _connects(inst, c):
         return "".join(f'<connect connectorId="{oc}" modelIndex="{o.idx}" layer="{layer}"/>'
@@ -480,7 +471,6 @@ class Sketch:
             z.writestr(name + ".fz", fz)
             for k, v in sorted(self.embedded.items()):
                 z.writestr(k, v)
-        # Expected nets for lint.py, which checks what Fritzing actually drew.
         fzp = open(os.path.join(self.dir, "core", "Half_breadboard_v2.fzp")).read()
         buses = [re.findall(r'connectorId="([^"]+)"', body)
                  for body in re.findall(r'<bus id="[^"]+">(.*?)</bus>', fzp, re.S)]
@@ -488,9 +478,6 @@ class Sketch:
             json.dump({"nets": self.expected, "buses": buses, "svgids": self.svgids}, f, indent=1)
 
 
-# --------------------------------------------------------------------------
-# The two bench sketches
-# --------------------------------------------------------------------------
 
 def pro_micro_files():
     """SparkFun's part, with male pins, our moduleId and a breadboard layer group
@@ -566,7 +553,6 @@ def common(sk, jfp_at):
     sk.wire("pin28Y", "pin28W", RED, "+ top to + bottom")
     sk.wire("pin27Z", "pin27X", BLACK, "- top to - bottom")
 
-    # Inverter (schematic-test.png): input column 17, Q1 C/B/E = 20/21/22.
     q1 = bc547(sk, "Q1 BC547", "pin20E")
     r1 = resistor(sk, "R1 10k", "10kΩ", "pin17D", "pin21D")
     d1 = sk.core(DIODE_ID, "sparkfun-discretesemi-diode-1n4148_v2.fzp", "D1 1N4148")
@@ -614,9 +600,7 @@ def bench_relay(parts):
     hdr = lambda n: (rel, f"connector{n - 1}")
     term = lambda ch, t: (rel, f"connector{40 + (ch - 1) * 3 + ('NC', 'COM', 'NO').index(t)}")
     sk.wire("pin31Y", hdr(2), RED, "relay 5V")
-    # Header pin 1 feeds the optocoupler LEDs and the IN_CH pull-ups (Waveshare
-    # schematic: 3.3V -> R1 1k -> PC817 -> LED1 -> IN_CH1). The Pro Micro has
-    # no 3V3 out; 5V on that net is fine (pin HIGH = 4.8 V, LED stays off).
+    # Header 1 (3V3) feeds the opto LEDs; without it CH1 IN does nothing. 5 V there is fine.
     sk.wire("pin29Y", hdr(1), ORANGE, "relay 3V3 from +5V")
     sk.wire("pin30Z", hdr(6), BLACK, "relay GND")
     sk.wire("pin8C", hdr(37), GREEN, "Pro Micro 4 to relay CH1")

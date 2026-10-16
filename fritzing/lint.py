@@ -109,7 +109,6 @@ def main(fzz, svg, nets_json):
         hs = [h for h, xy in holes.items() if near(p, xy)]
         return hs[0] if len(hs) == 1 else None
 
-    # Where each part connector really is: leg end if it has a leg, else the pin.
     ends = {}   # (title, connector) -> xy
     for pid, rec in drawn.items():
         if pid == bb_pid or kind.get(pid) in (None, "WireModuleID", "NoteModuleID"):
@@ -165,7 +164,6 @@ def main(fzz, svg, nets_json):
         for h in bus[1:]:
             union((bb, bus[0]), (bb, h))
 
-    # Every leg must end in a hole: a leg in the air is a drawing error.
     for pid, rec in drawn.items():
         for a, b in rec["legs"]:
             if not hole_at(b):
