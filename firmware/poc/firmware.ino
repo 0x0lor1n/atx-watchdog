@@ -12,16 +12,17 @@ struct Line {
 
 const uint8_t BUTTON_PIN = 4;
 #ifdef BUTTON_ACTIVE_HIGH
-const bool ACTIVE_LOW = false;  // BC547 on PWR SW
+const bool ACTIVE_LOW = false; // BC547 on PWR SW
 #else
-const bool ACTIVE_LOW = true;   // Waveshare relay board input
+const bool ACTIVE_LOW = true; // Waveshare relay board input
 #endif
 
 const unsigned long SETTLE_MS = 3000;  // let the kernel reach its final halt
 const unsigned long HOLD_MS = 6000;    // PCH forces off after 4 s held
 const unsigned long OFF_GAP_MS = 3000; // board fully off before powering on
 const unsigned long PRESS_MS = 300;    // a normal short press
-const unsigned long WATCHDOG_MS = 5UL * 60 * 1000;  // module.nix asserts >= 2 beats fit
+const unsigned long WATCHDOG_MS =
+    5UL * 60 * 1000; // module.nix asserts >= 2 beats fit
 
 // Disarmed after firing: a NAS that cannot boot gets one cycle, not a loop.
 static bool armed = false;
@@ -32,7 +33,8 @@ static void button(bool pressed) {
 }
 
 static void say(const char *msg) {
-  if (Serial) Serial.println(msg);
+  if (Serial)
+    Serial.println(msg);
 }
 
 static void press(unsigned long ms) {
@@ -76,7 +78,8 @@ static void run(const char *cmd) {
     say("pong");
     return;
   } else if (!strcmp(cmd, "STATUS")) {
-    if (!Serial) return;
+    if (!Serial)
+      return;
     if (armed) {
       Serial.print("watchdog: armed, last ALIVE s ago: ");
       Serial.println((millis() - last_alive) / 1000);
@@ -97,7 +100,8 @@ static void feed(Line &l, int c) {
       Serial.print(l.name);
       Serial.println(l.overlong ? "(overlong, dropped)" : l.buf);
     }
-    if (l.len && !l.overlong) run(l.buf);
+    if (l.len && !l.overlong)
+      run(l.buf);
     l.len = 0;
     l.overlong = false;
   } else if (l.len < sizeof(l.buf) - 1) {
@@ -110,7 +114,7 @@ static void feed(Line &l, int c) {
 static Line com = {"com: "}, usb = {"usb: "};
 
 void setup() {
-  button(false);  // idle level before pinMode, or the relay clicks on boot
+  button(false); // idle level before pinMode, or the relay clicks on boot
   pinMode(BUTTON_PIN, OUTPUT);
   button(false);
   Serial.begin(115200);
@@ -118,8 +122,10 @@ void setup() {
 }
 
 void loop() {
-  while (Serial1.available()) feed(com, Serial1.read());
-  while (Serial.available()) feed(usb, Serial.read());
+  while (Serial1.available())
+    feed(com, Serial1.read());
+  while (Serial.available())
+    feed(usb, Serial.read());
   if (armed && millis() - last_alive >= WATCHDOG_MS) {
     armed = false;
     say("watchdog: no ALIVE, hold, gap, press");

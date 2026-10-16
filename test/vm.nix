@@ -1,7 +1,5 @@
 # module.nix in a VM; the QEMU serial port stands in for JCOM1.
-self:
-{ ... }:
-{
+self: _: {
   name = "nas-power-button";
 
   nodes.nas = {

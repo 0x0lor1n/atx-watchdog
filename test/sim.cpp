@@ -22,7 +22,8 @@ unsigned long millis() { return now_ms; }
 void delay(unsigned long ms) { now_ms += ms; }
 void pinMode(uint8_t, uint8_t) {}
 void digitalWrite(uint8_t, uint8_t v) {
-  if (v != pin_level) edges.push_back({now_ms, v});
+  if (v != pin_level)
+    edges.push_back({now_ms, v});
   pin_level = v;
 }
 
@@ -30,7 +31,7 @@ struct FakeSerial {
   std::deque<char> in;
   std::string out;
   bool connected = true;
-  void begin(unsigned long) {}
+  static void begin(unsigned long) {}
   explicit operator bool() const { return connected; }
   int available() { return (int)in.size(); }
   int read() {
@@ -55,12 +56,12 @@ static const int PRESSED = LOW, RELEASED = HIGH;
 #endif
 
 static int failures;
-#define CHECK(cond)                                                      \
-  do {                                                                   \
-    if (!(cond)) {                                                       \
-      std::printf("  FAIL %s:%d  %s\n", __FILE__, __LINE__, #cond);      \
-      failures++;                                                        \
-    }                                                                    \
+#define CHECK(cond)                                                            \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      std::printf("  FAIL %s:%d  %s\n", __FILE__, __LINE__, #cond);            \
+      failures++;                                                              \
+    }                                                                          \
   } while (0)
 
 struct Press {
@@ -97,7 +98,8 @@ static void run_for(unsigned long ms) {
 
 static void test(const char *name, void (*fn)()) {
   int before = failures;
-  fn();
+  fn(); // bumps `failures` through check()
+  // cppcheck-suppress knownConditionTrueFalse
   std::printf("%s %s\n", failures == before ? "ok  " : "FAIL", name);
 }
 
@@ -109,7 +111,8 @@ int main() {
 
   test("boot noise and partial words never press", [] {
     boot();
-    Serial1.send("\x00\xff garbage\nPOWER\nPOWEROF\npoweroff\n POWEROFF\nREBOOTX\n");
+    Serial1.send(
+        "\x00\xff garbage\nPOWER\nPOWEROF\npoweroff\n POWEROFF\nREBOOTX\n");
     run_for(30000);
     CHECK(presses().empty());
   });
@@ -132,7 +135,7 @@ int main() {
 
   test("PRESS = one 300 ms press", [] {
     boot();
-    Serial.send("PRESS\r\n");            // picocom --omap crlf
+    Serial.send("PRESS\r\n"); // picocom --omap crlf
     run_for(2000);
     auto p = presses();
     CHECK(p.size() == 1);
@@ -248,7 +251,8 @@ int main() {
     CHECK(presses().empty());
     CHECK(Serial.out.find("pong") != std::string::npos);
     CHECK(Serial.out.find("watchdog: disarmed") != std::string::npos);
-    CHECK(Serial.out.find("watchdog: armed, last ALIVE s ago: 30") != std::string::npos);
+    CHECK(Serial.out.find("watchdog: armed, last ALIVE s ago: 30") !=
+          std::string::npos);
   });
 
   std::printf(failures ? "\n%d check(s) failed\n" : "\nall passed\n", failures);

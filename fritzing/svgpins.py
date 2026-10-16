@@ -21,17 +21,20 @@ def _units_to_in(v):
 
 def _mul(a, b):
     return (
-        a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1],
-        a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3],
-        a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5],
+        a[0] * b[0] + a[2] * b[1],
+        a[1] * b[0] + a[3] * b[1],
+        a[0] * b[2] + a[2] * b[3],
+        a[1] * b[2] + a[3] * b[3],
+        a[0] * b[4] + a[2] * b[5] + a[4],
+        a[1] * b[4] + a[3] * b[5] + a[5],
     )
 
 
-I = (1, 0, 0, 1, 0, 0)
+IDENTITY = (1, 0, 0, 1, 0, 0)
 
 
 def _transform(s):
-    m = I
+    m = IDENTITY
     for name, args in re.findall(r"(\w+)\s*\(([^)]*)\)", s or ""):
         a = [float(x) for x in re.findall(NUM, args)]
         if name == "translate":
@@ -62,12 +65,14 @@ def _path_points(d):
     arity = dict(M=2, L=2, T=2, H=1, V=1, C=6, S=4, Q=4, A=7, Z=0)
     while i < len(toks):
         if re.fullmatch("[A-Za-z]", toks[i]):
-            cmd = toks[i]; i += 1
+            cmd = toks[i]
+            i += 1
             if cmd in "Zz":
                 x, y = sx, sy
                 continue
         n = arity[cmd.upper()]
-        a = [float(t) for t in toks[i:i + n]]; i += n
+        a = [float(t) for t in toks[i : i + n]]
+        i += n
         rel = cmd.islower()
         U = cmd.upper()
         if U == "H":
@@ -104,7 +109,7 @@ def _local_points(e):
         return [(g("x1"), g("y1")), (g("x2"), g("y2"))]
     if tag in ("polygon", "polyline"):
         n = [float(v) for v in re.findall(NUM, e.get("points", ""))]
-        return list(zip(n[::2], n[1::2]))
+        return list(zip(n[::2], n[1::2], strict=True))
     if tag == "path":
         return _path_points(e.get("d", ""))
     return []

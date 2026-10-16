@@ -19,35 +19,52 @@ P = 9.0
 def shift_instance(fz, title, dx, dy):
     """Move a part's breadboard geometry (x, y) by dx, dy."""
     i = fz.index(f"<title>{title}</title>")
-    j = fz.index('<breadboardView', i)
+    j = fz.index("<breadboardView", i)
     m = re.compile(r'<geometry z="([^"]+)" x="([^"]+)" y="([^"]+)"').search(fz, j)
     new = f'<geometry z="{m[1]}" x="{float(m[2]) + dx:.4f}" y="{float(m[3]) + dy:.4f}"'
-    return fz[:m.start()] + new + fz[m.end():]
+    return fz[: m.start()] + new + fz[m.end() :]
 
 
 def move_wire_end(fz, title, dx, dy):
     i = fz.index(f"<title>{title}</title>")
     m = re.compile(r'x2="([^"]+)" y2="([^"]+)"').search(fz, i)
     new = f'x2="{float(m[1]) + dx:.4f}" y2="{float(m[2]) + dy:.4f}"'
-    return fz[:m.start()] + new + fz[m.end():]
+    return fz[: m.start()] + new + fz[m.end() :]
 
 
 # (sketch, name, mutation). Every one is a real bench mistake.
 CASES = [
-    ("bench-relay", "Q1 one column right (C B E shifted)",
-     lambda fz: shift_instance(fz, "Q1 BC547", P, 0)),
-    ("bench-relay", "RX wire lands one hole off (TX instead of RX)",
-     lambda fz: move_wire_end(fz, "Q1 C to Pro Micro RX", -P, 0)),
-    ("bench-relay", "relay CH1 wire on header pin 35 instead of 37",
-     lambda fz: move_wire_end(fz, "Pro Micro 4 to relay CH1", -P, 0)),
-    ("bench-relay", "D1 across the centre gap",
-     lambda fz: shift_instance(fz, "D1 1N4148", 0, -4 * P)),
-    ("bench-relay", "Pro Micro one column right",
-     lambda fz: shift_instance(fz, "Pro Micro", P, 0)),
-    ("bench-transistor", "R4 half a row down (both legs off their holes)",
-     lambda fz: shift_instance(fz, "R4 10k", 0, P / 2)),
-    ("bench-transistor", "Q2 emitter wire into the + rail",
-     lambda fz: move_wire_end(fz, "Q2 E to -", 0, P)),
+    (
+        "bench-relay",
+        "Q1 one column right (C B E shifted)",
+        lambda fz: shift_instance(fz, "Q1 BC547", P, 0),
+    ),
+    (
+        "bench-relay",
+        "RX wire lands one hole off (TX instead of RX)",
+        lambda fz: move_wire_end(fz, "Q1 C to Pro Micro RX", -P, 0),
+    ),
+    (
+        "bench-relay",
+        "relay CH1 wire on header pin 35 instead of 37",
+        lambda fz: move_wire_end(fz, "Pro Micro 4 to relay CH1", -P, 0),
+    ),
+    (
+        "bench-relay",
+        "D1 across the centre gap",
+        lambda fz: shift_instance(fz, "D1 1N4148", 0, -4 * P),
+    ),
+    ("bench-relay", "Pro Micro one column right", lambda fz: shift_instance(fz, "Pro Micro", P, 0)),
+    (
+        "bench-transistor",
+        "R4 half a row down (both legs off their holes)",
+        lambda fz: shift_instance(fz, "R4 10k", 0, P / 2),
+    ),
+    (
+        "bench-transistor",
+        "Q2 emitter wire into the + rail",
+        lambda fz: move_wire_end(fz, "Q2 E to -", 0, P),
+    ),
 ]
 
 
@@ -68,13 +85,25 @@ def main(fritzing, src):
                     assert after != before, name
                     data = after.encode()
                 zo.writestr(n, data)
-        subprocess.run([fritzing, "-svg", d], env=dict(os.environ, QT_QPA_PLATFORM="offscreen"),
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120, check=True)
-        r = subprocess.run([sys.executable, os.path.join(HERE, "lint.py"),
-                            os.path.join(d, sketch + ".fzz"),
-                            os.path.join(d, sketch + "_breadboard.svg"),
-                            os.path.join(src, sketch + ".nets.json")],
-                           capture_output=True, text=True)
+        subprocess.run(
+            [fritzing, "-svg", d],
+            env=dict(os.environ, QT_QPA_PLATFORM="offscreen"),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=120,
+            check=True,
+        )
+        r = subprocess.run(
+            [
+                sys.executable,
+                os.path.join(HERE, "lint.py"),
+                os.path.join(d, sketch + ".fzz"),
+                os.path.join(d, sketch + "_breadboard.svg"),
+                os.path.join(src, sketch + ".nets.json"),
+            ],
+            capture_output=True,
+            text=True,
+        )
         caught = r.returncode == 1
         first = (r.stdout.strip().splitlines() or ["(no output)"])[0].split(": ", 1)[-1]
         print(f"{'caught' if caught else 'MISSED'}: {name} -> {first}")

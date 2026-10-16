@@ -1,6 +1,11 @@
 # NAS side of the Pro Micro power button on JCOM1: POWEROFF/REBOOT from a
 # system-shutdown hook, ALIVE from a heartbeat service, DISARM on its stop.
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.services.nas-power-button;
   stty = "${pkgs.coreutils}/bin/stty -F ${cfg.port} 9600 cs8 -cstopb -parenb raw -echo";

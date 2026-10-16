@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 
 import svgpins as sp
 
-TOL = 0.03 * sp.SCENE_DPI   # a pin is "in" a hole within 0.03 in
+TOL = 0.03 * sp.SCENE_DPI  # a pin is "in" a hole within 0.03 in
 SVG = "{http://www.w3.org/2000/svg}"
 
 
@@ -49,14 +49,14 @@ def parts_from_svg(path):
             continue
         rec = out[int(pid)] = {"pins": {}, "legs": [], "wire": None}
 
-        def walk(e, m):
+        def walk(e, m, rec=rec):
             m2 = sp._mul(m, sp._transform(e.get("transform")))
             i = e.get("id") or ""
             if re.fullmatch(r"connector\d+pin|pin\d+[A-Z]", i):
                 rec["pins"][i] = centre(e, m)
             if tag(e) == "line" and rec["wire"] is None and not rec["pins"]:
-                g_ = lambda k: float(e.get(k))
-                rec["wire"] = (sp._apply(m2, g_("x1"), g_("y1")), sp._apply(m2, g_("x2"), g_("y2")))
+                x1, y1, x2, y2 = (float(e.get(k)) for k in ("x1", "y1", "x2", "y2"))
+                rec["wire"] = (sp._apply(m2, x1, y1), sp._apply(m2, x2, y2))
             for c in e:
                 walk(c, m2)
 
@@ -67,7 +67,12 @@ def parts_from_svg(path):
 def _leg(e, m):
     """An opaque two-point path (the leg itself, not its translucent
     green/red connection highlight), as (start, end) in scene px."""
-    if e.get("opacity", "1") != "1" or e.get("stroke", "").lower() in ("#00ff00", "#ff0000", "none", ""):
+    if e.get("opacity", "1") != "1" or e.get("stroke", "").lower() in (
+        "#00ff00",
+        "#ff0000",
+        "none",
+        "",
+    ):
         return None
     pts = sp._path_points(e.get("d", ""))
     pts = [p for k, p in enumerate(pts) if k == 0 or p != pts[k - 1]]
@@ -79,10 +84,15 @@ def _leg(e, m):
 
 def instances(fzz):
     import zipfile
+
     z = zipfile.ZipFile(fzz)
     fz = z.read(next(n for n in z.namelist() if n.endswith(".fz"))).decode()
     res = {}
-    for m in re.finditer(r'<instance moduleIdRef="([^"]+)" modelIndex="(\d+)"[^>]*>.*?<title>([^<]*)</title>', fz, re.S):
+    for m in re.finditer(
+        r'<instance moduleIdRef="([^"]+)" modelIndex="(\d+)"[^>]*>.*?<title>([^<]*)</title>',
+        fz,
+        re.S,
+    ):
         res[int(m[2])] = (m[1], m[3])
     return res
 
@@ -92,7 +102,8 @@ def near(p, q):
 
 
 def main(fzz, svg, nets_json):
-    exp = json.load(open(nets_json))
+    with open(nets_json) as f:
+        exp = json.load(f)
     inst = instances(fzz)
     drawn = parts_from_svg(svg)
     findings = []
@@ -103,13 +114,13 @@ def main(fzz, svg, nets_json):
     bb_pid = next(p for p, k in kind.items() if k.endswith("BreadboardModuleID"))
     bb = title[bb_pid]
     holes = {i: xy for i, xy in drawn[bb_pid]["pins"].items() if re.fullmatch(r"pin\d+[A-Z]", i)}
-    svgid_to_conn = exp["svgids"]   # title -> {svgId: connectorId}
+    svgid_to_conn = exp["svgids"]  # title -> {svgId: connectorId}
 
     def hole_at(p):
         hs = [h for h, xy in holes.items() if near(p, xy)]
         return hs[0] if len(hs) == 1 else None
 
-    ends = {}   # (title, connector) -> xy
+    ends = {}  # (title, connector) -> xy
     for pid, rec in drawn.items():
         if pid == bb_pid or kind.get(pid) in (None, "WireModuleID", "NoteModuleID"):
             continue
@@ -165,7 +176,7 @@ def main(fzz, svg, nets_json):
             union((bb, bus[0]), (bb, h))
 
     for pid, rec in drawn.items():
-        for a, b in rec["legs"]:
+        for _, b in rec["legs"]:
             if not hole_at(b):
                 findings.append(f"{title.get(pid, pid)}: leg ends at ({b[0]:.1f},{b[1]:.1f}), not in a hole")
 
@@ -176,7 +187,9 @@ def main(fzz, svg, nets_json):
             if (t, c) not in ends:
                 findings.append(f"net {name}: {t} {c} not found in the drawing")
                 continue
-            roots.setdefault(find((t, c)), []).append(f"{t} {c}" + (f" ({plugged[(t, c)]})" if (t, c) in plugged else ""))
+            roots.setdefault(find((t, c)), []).append(
+                f"{t} {c}" + (f" ({plugged[(t, c)]})" if (t, c) in plugged else "")
+            )
         if len(roots) > 1:
             findings.append(f"net {name} is split: " + " | ".join(", ".join(v) for v in roots.values()))
         for r in roots:

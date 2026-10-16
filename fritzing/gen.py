@@ -32,23 +32,32 @@ JFP1_ID = "nas-power-button-msi-jfp1"
 JCOM1_ID = "nas-power-button-msi-jcom1"
 
 RED, BLACK, YELLOW, GREEN, ORANGE, BLUE = (
-    "#cc1414", "#404040", "#ffe24d", "#47cc79", "#ef6100", "#418dd9")
+    "#cc1414",
+    "#404040",
+    "#ffe24d",
+    "#47cc79",
+    "#ef6100",
+    "#418dd9",
+)
 
-P = 9.0           # 0.1 in in scene px
+P = 9.0  # 0.1 in in scene px
 MM = 90 / 25.4
 
 
-
 def _svg(w, h, body):
-    return (f'<?xml version="1.0" encoding="UTF-8"?>\n'
-            f'<svg xmlns="http://www.w3.org/2000/svg" width="{w / 90:.4f}in" '
-            f'height="{h / 90:.4f}in" viewBox="0 0 {w:.3f} {h:.3f}">\n{body}\n</svg>\n')
+    return (
+        f'<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w / 90:.4f}in" '
+        f'height="{h / 90:.4f}in" viewBox="0 0 {w:.3f} {h:.3f}">\n{body}\n</svg>\n'
+    )
 
 
 def _text(x, y, s, size=5.0, fill="#ffffff", anchor="middle", weight="normal"):
-    return (f'<text x="{x:.2f}" y="{y:.2f}" font-family="Droid Sans, sans-serif" '
-            f'font-size="{size}" font-weight="{weight}" fill="{fill}" '
-            f'text-anchor="{anchor}">{html.escape(s)}</text>')
+    return (
+        f'<text x="{x:.2f}" y="{y:.2f}" font-family="Droid Sans, sans-serif" '
+        f'font-size="{size}" font-weight="{weight}" fill="{fill}" '
+        f'text-anchor="{anchor}">{html.escape(s)}</text>'
+    )
 
 
 class GenPart:
@@ -68,7 +77,8 @@ class GenPart:
         pins = "\n".join(
             f'<rect id="connector{i}pin" x="{x - 2.5:.2f}" y="{y - 2.5:.2f}" '
             f'width="5" height="5" fill="#c9a33a" stroke="#6b5413" stroke-width="0.4"/>'
-            for i, (_, x, y, _) in enumerate(self.pins))
+            for i, (_, x, y, _) in enumerate(self.pins)
+        )
         return _svg(self.w, self.h, f'<g id="breadboard">\n{"".join(self.art)}\n{pins}\n</g>')
 
     def schematic_svg(self):
@@ -77,41 +87,51 @@ class GenPart:
         rows = max(len(left), len(right))
         bw, lead = 9 * 12, 18.0
         W, H = bw + 2 * lead, (rows + 2) * P + 9
-        out = [f'<rect x="{lead}" y="4.5" width="{bw}" height="{H - 9}" fill="#ffffff" '
-               f'stroke="#000000" stroke-width="1"/>',
-               _text(W / 2, H - 9, self.title, 6, "#000000")]
+        out = [
+            f'<rect x="{lead}" y="4.5" width="{bw}" height="{H - 9}" fill="#ffffff" '
+            f'stroke="#000000" stroke-width="1"/>',
+            _text(W / 2, H - 9, self.title, 6, "#000000"),
+        ]
         for col, idxs in ((0, left), (1, right)):
             for r, i in enumerate(idxs):
                 y = (r + 1) * P + 4.5
                 x0, x1 = (0, lead) if col == 0 else (W - lead, W)
                 tx = x0 if col == 0 else x1 - 0.1
-                out.append(f'<line id="connector{i}pin" x1="{x0}" y1="{y}" x2="{x1}" y2="{y}" '
-                           f'stroke="#000000" stroke-width="1"/>')
-                out.append(f'<rect id="connector{i}terminal" x="{tx}" y="{y - 0.05}" '
-                           f'width="0.1" height="0.1" fill="none"/>')
+                out.append(
+                    f'<line id="connector{i}pin" x1="{x0}" y1="{y}" x2="{x1}" y2="{y}" '
+                    f'stroke="#000000" stroke-width="1"/>'
+                )
+                out.append(
+                    f'<rect id="connector{i}terminal" x="{tx}" y="{y - 0.05}" width="0.1" height="0.1" fill="none"/>'
+                )
                 lx = x1 + 2 if col == 0 else x0 - 2
-                out.append(_text(lx, y + 2, self.pins[i][0], 5, "#000000",
-                                 "start" if col == 0 else "end"))
+                out.append(_text(lx, y + 2, self.pins[i][0], 5, "#000000", "start" if col == 0 else "end"))
         return _svg(W, H, '<g id="schematic">\n' + "\n".join(out) + "\n</g>")
 
     def pcb_svg(self):
         pads = "\n".join(
             f'<circle id="connector{i}pad" cx="{x:.2f}" cy="{y:.2f}" r="2.6" '
             f'fill="none" stroke="#f7bd13" stroke-width="2"/>'
-            for i, (_, x, y, _) in enumerate(self.pins))
-        silk = (f'<g id="silkscreen"><rect x="0.5" y="0.5" width="{self.w - 1:.2f}" '
-                f'height="{self.h - 1:.2f}" fill="none" stroke="#ffffff" stroke-width="1"/></g>')
+            for i, (_, x, y, _) in enumerate(self.pins)
+        )
+        silk = (
+            f'<g id="silkscreen"><rect x="0.5" y="0.5" width="{self.w - 1:.2f}" '
+            f'height="{self.h - 1:.2f}" fill="none" stroke="#ffffff" stroke-width="1"/></g>'
+        )
         return _svg(self.w, self.h, f'{silk}\n<g id="copper1"><g id="copper0">\n{pads}\n</g></g>')
 
     def fzp(self):
-        conns = "\n".join(f'''  <connector id="connector{i}" name="{html.escape(n)}" type="{self.pin_type}">
+        conns = "\n".join(
+            f'''  <connector id="connector{i}" name="{html.escape(n)}" type="{self.pin_type}">
    <description>{html.escape(n)}</description>
    <views>
     <breadboardView><p layer="breadboard" svgId="connector{i}pin"/></breadboardView>
     <schematicView><p layer="schematic" svgId="connector{i}pin" terminalId="connector{i}terminal"/></schematicView>
     <pcbView><p layer="copper0" svgId="connector{i}pad"/><p layer="copper1" svgId="connector{i}pad"/></pcbView>
    </views>
-  </connector>''' for i, (n, _, _, _) in enumerate(self.pins))
+  </connector>'''
+            for i, (n, _, _, _) in enumerate(self.pins)
+        )
         m = self.module_id
         return f'''<?xml version="1.0" encoding="UTF-8"?>
 <module fritzingVersion="1.0.6" moduleId="{m}">
@@ -153,20 +173,31 @@ def relay_board():
     of channels and terminals on the real board is not documented.
     """
     w, h = 65 * MM, 56.5 * MM
-    p = GenPart(RELAY_ID, "Waveshare RPi Relay Board", "K", "relay module",
-                "3-channel relay HAT. CH1/CH2/CH3 = header pins 37/38/40 (BCM 26/20/21), "
-                "active LOW, only through the Relay_JMP jumpers. Powered from header "
-                "pins 2 (5V), 1 (3V3, optocoupler side), 6 (GND).",
-                w, h, "female")
+    p = GenPart(
+        RELAY_ID,
+        "Waveshare RPi Relay Board",
+        "K",
+        "relay module",
+        "3-channel relay HAT. CH1/CH2/CH3 = header pins 37/38/40 (BCM 26/20/21), "
+        "active LOW, only through the Relay_JMP jumpers. Powered from header "
+        "pins 2 (5V), 1 (3V3, optocoupler side), 6 (GND).",
+        w,
+        h,
+        "female",
+    )
     a = p.art
     a.append(f'<rect x="0" y="0" width="{w:.2f}" height="{h:.2f}" rx="10" fill="#1e5aa8"/>')
     for hx, hy in ((3.5, 3.5), (61.5, 3.5), (3.5, 52.5), (61.5, 52.5)):
-        a.append(f'<circle cx="{hx * MM:.2f}" cy="{hy * MM:.2f}" r="{3.1 * MM:.2f}" fill="#d7c27a"/>'
-                 f'<circle cx="{hx * MM:.2f}" cy="{hy * MM:.2f}" r="{1.375 * MM:.2f}" fill="#ffffff"/>')
+        a.append(
+            f'<circle cx="{hx * MM:.2f}" cy="{hy * MM:.2f}" r="{3.1 * MM:.2f}" fill="#d7c27a"/>'
+            f'<circle cx="{hx * MM:.2f}" cy="{hy * MM:.2f}" r="{1.375 * MM:.2f}" fill="#ffffff"/>'
+        )
     x0 = 32.5 * MM - 9.5 * P
     y_even, y_odd = 3.5 * MM, 3.5 * MM + P
-    a.append(f'<rect x="{x0 - 5.5:.2f}" y="{y_even - 5.5:.2f}" width="{19 * P + 11:.2f}" '
-             f'height="{P + 11:.2f}" fill="#111111"/>')
+    a.append(
+        f'<rect x="{x0 - 5.5:.2f}" y="{y_even - 5.5:.2f}" width="{19 * P + 11:.2f}" '
+        f'height="{P + 11:.2f}" fill="#111111"/>'
+    )
     gnd = {6, 9, 14, 20, 25, 30, 34, 39}
     names = {1: "3V3", 17: "3V3", 2: "5V", 4: "5V", 37: "CH1", 38: "CH2", 40: "CH3"}
     for n in range(1, 41):
@@ -182,15 +213,19 @@ def relay_board():
     a.append(_text(jx + 3 * MM, jy + 4.6 * MM, "JMP", 4.5, "#000000"))
     for ch in range(3):
         cx = (14.5 + ch * 18) * MM
-        a.append(f'<rect x="{cx - 7.5 * MM:.2f}" y="{18 * MM:.2f}" width="{15 * MM:.2f}" '
-                 f'height="{18 * MM:.2f}" rx="2" fill="#151515"/>')
+        a.append(
+            f'<rect x="{cx - 7.5 * MM:.2f}" y="{18 * MM:.2f}" width="{15 * MM:.2f}" '
+            f'height="{18 * MM:.2f}" rx="2" fill="#151515"/>'
+        )
         a.append(_text(cx, 26 * MM, "HLS8L", 6, "#bbbbbb"))
         a.append(_text(cx, 29 * MM, "DC5V", 6, "#bbbbbb"))
         a.append(f'<circle cx="{cx - 5 * MM:.2f}" cy="{14 * MM:.2f}" r="3" fill="#ff3b3b"/>')
         a.append(_text(cx - 3 * MM, 15 * MM, f"LED{ch + 1}", 5, "#ffffff", "start"))
         a.append(_text(cx, 41 * MM, f"CH{ch + 1}", 7, "#ffffff", weight="bold"))
-        a.append(f'<rect x="{cx - 7.5 * MM:.2f}" y="{43 * MM:.2f}" width="{15 * MM:.2f}" '
-                 f'height="{9 * MM:.2f}" fill="#2f9e4f"/>')
+        a.append(
+            f'<rect x="{cx - 7.5 * MM:.2f}" y="{43 * MM:.2f}" width="{15 * MM:.2f}" '
+            f'height="{9 * MM:.2f}" fill="#2f9e4f"/>'
+        )
         for t, nm in enumerate(("NC", "COM", "NO")):
             x = cx + (t - 1) * 5 * MM
             a.append(f'<circle cx="{x:.2f}" cy="{46.5 * MM:.2f}" r="{1.7 * MM:.2f}" fill="#9aa4ad"/>')
@@ -200,10 +235,28 @@ def relay_board():
     return p
 
 
-MSI_JFP1 = {1: "HDD LED+", 2: "Power LED+", 3: "HDD LED-", 4: "Power LED-", 5: "Reset SW",
-            6: "Power SW", 7: "Reset SW", 8: "Power SW", 9: "Reserved"}
-MSI_JCOM1 = {1: "DCD", 2: "SIN", 3: "SOUT", 4: "DTR", 5: "GND", 6: "DSR", 7: "RTS",
-             8: "CTS", 9: "RI"}
+MSI_JFP1 = {
+    1: "HDD LED+",
+    2: "Power LED+",
+    3: "HDD LED-",
+    4: "Power LED-",
+    5: "Reset SW",
+    6: "Power SW",
+    7: "Reset SW",
+    8: "Power SW",
+    9: "Reserved",
+}
+MSI_JCOM1 = {
+    1: "DCD",
+    2: "SIN",
+    3: "SOUT",
+    4: "DTR",
+    5: "GND",
+    6: "DSR",
+    7: "RTS",
+    8: "CTS",
+    9: "RI",
+}
 
 
 def msi_header(module_id, title, names, desc, odd_on_top):
@@ -231,7 +284,6 @@ def msi_header(module_id, title, names, desc, odd_on_top):
     return p
 
 
-
 class Inst:
     def __init__(self, sk, module_id, title, path, size, pins, legs=None, props=None):
         self.module_id, self.title, self.path = module_id, title, path
@@ -239,11 +291,11 @@ class Inst:
         self.size, self.pins, self.legs = size, pins, legs or {}
         self.props = props or {}
         self.pos, self.rot = (0.0, 0.0), 0
-        self.leg_end = {}   # connector -> scene point
-        self.conns = {}     # connector -> [(other, other_connector, layer)]
+        self.leg_end = {}  # connector -> scene point
+        self.conns = {}  # connector -> [(other, other_connector, layer)]
         self.z = 2.5
         self.sch = self.pcb = (0, 0)
-        self.ends, self.color = [], None   # wires only
+        self.ends, self.color = [], None  # wires only
         sk.insts.append(self)
 
     def local_to_scene(self, pt):
@@ -284,7 +336,8 @@ class Sketch:
         return self.bb.pin_scene(name)
 
     def core(self, module_id, fzp, title, props=None):
-        t = open(os.path.join(self.dir, "core", fzp)).read()
+        with open(os.path.join(self.dir, "core", fzp)) as f:
+            t = f.read()
         bb = re.search(r"<breadboardView>\s*<layers image=\"([^\"]+)\"", t)[1]
         size, c, lines = svgpins.load(os.path.join(self.dir, "svg/core", bb))
         pins, legs, ids = {}, {}, {}
@@ -363,7 +416,8 @@ class Sketch:
             if i.module_id == "WireModuleID":
                 union((i.title, "connector0"), (i.title, "connector1"))
         bb = self.bb.title
-        fzp = open(os.path.join(self.dir, "core", "Half_breadboard_v2.fzp")).read()
+        with open(os.path.join(self.dir, "core", "Half_breadboard_v2.fzp")) as f:
+            fzp = f.read()
         for bus, body in re.findall(r'<bus id="([^"]+)">(.*?)</bus>', fzp, re.S):
             for h in re.findall(r'connectorId="([^"]+)"', body):
                 union((bb, h), (bb, bus))
@@ -385,8 +439,7 @@ class Sketch:
         for name, members in expected.items():
             ks = {where.get(m) for m in members}
             if len(ks) != 1 or None in ks:
-                raise SystemExit(f"net {name} is split: " +
-                                 ", ".join(f"{m}->{where.get(m)}" for m in members))
+                raise SystemExit(f"net {name} is split: " + ", ".join(f"{m}->{where.get(m)}" for m in members))
             k = ks.pop()
             if k in seen:
                 raise SystemExit(f"nets {seen[k]} and {name} are shorted")
@@ -394,68 +447,93 @@ class Sketch:
 
     @staticmethod
     def _connects(inst, c):
-        return "".join(f'<connect connectorId="{oc}" modelIndex="{o.idx}" layer="{layer}"/>'
-                       for o, oc, layer in inst.conns.get(c, []))
+        return "".join(
+            f'<connect connectorId="{oc}" modelIndex="{o.idx}" layer="{layer}"/>'
+            for o, oc, layer in inst.conns.get(c, [])
+        )
 
     def _part_xml(self, i):
         props = "".join(f'<property name="{k}" value="{html.escape(v)}"/>' for k, v in i.props.items())
         tr = ""
         if i.rot == -90:
             cx, cy = i.size[0] / 2, i.size[1] / 2
-            tr = (f'<transform m11="0" m12="-1" m13="0" m21="1" m22="0" m23="0" '
-                  f'm31="{cx - cy:.4f}" m32="{cx + cy:.4f}" m33="1"/>')
+            tr = (
+                f'<transform m11="0" m12="-1" m13="0" m21="1" m22="0" m23="0" '
+                f'm31="{cx - cy:.4f}" m32="{cx + cy:.4f}" m33="1"/>'
+            )
         conns = []
         for c in sorted(set(i.conns) | set(i.leg_end)):
             if c in i.legs:
                 (sx, sy), _ = i.legs[c]
                 ex, ey = i.leg_end[c]
-                geo = (f'<geometry x="{sx:.4f}" y="{sy:.4f}"/><leg><point x="0" y="0"/><bezier/>'
-                       f'<point x="{ex - i.pos[0] - sx:.4f}" y="{ey - i.pos[1] - sy:.4f}"/><bezier/></leg>')
+                geo = (
+                    f'<geometry x="{sx:.4f}" y="{sy:.4f}"/><leg><point x="0" y="0"/><bezier/>'
+                    f'<point x="{ex - i.pos[0] - sx:.4f}" y="{ey - i.pos[1] - sy:.4f}"/><bezier/></leg>'
+                )
             else:
                 lx, ly = i.pins[c]
                 geo = f'<geometry x="{lx:.4f}" y="{ly:.4f}"/>'
-            conns.append(f'<connector connectorId="{c}" layer="breadboard">{geo}'
-                         f'<connects>{self._connects(i, c)}</connects></connector>')
+            conns.append(
+                f'<connector connectorId="{c}" layer="breadboard">{geo}'
+                f"<connects>{self._connects(i, c)}</connects></connector>"
+            )
         layer = "breadboardbreadboard" if i is self.bb else "breadboard"
-        other = "" if i is self.bb else (
-            f'<schematicView layer="schematic"><geometry z="2.5" x="{i.sch[0]}" y="{i.sch[1]}"/></schematicView>'
-            f'<pcbView layer="copper0"><geometry z="2.5" x="{i.pcb[0]}" y="{i.pcb[1]}"/></pcbView>')
-        return (f'<instance moduleIdRef="{i.module_id}" modelIndex="{i.idx}" path="{i.path}">'
-                f'{props}<title>{html.escape(i.title)}</title><views>'
-                f'<breadboardView layer="{layer}"><geometry z="{i.z}" x="{i.pos[0]:.4f}" '
-                f'y="{i.pos[1]:.4f}">{tr}</geometry>'
-                f'<connectors>{"".join(conns)}</connectors></breadboardView>{other}</views></instance>')
+        other = (
+            ""
+            if i is self.bb
+            else (
+                f'<schematicView layer="schematic"><geometry z="2.5" x="{i.sch[0]}" y="{i.sch[1]}"/></schematicView>'
+                f'<pcbView layer="copper0"><geometry z="2.5" x="{i.pcb[0]}" y="{i.pcb[1]}"/></pcbView>'
+            )
+        )
+        return (
+            f'<instance moduleIdRef="{i.module_id}" modelIndex="{i.idx}" path="{i.path}">'
+            f"{props}<title>{html.escape(i.title)}</title><views>"
+            f'<breadboardView layer="{layer}"><geometry z="{i.z}" x="{i.pos[0]:.4f}" '
+            f'y="{i.pos[1]:.4f}">{tr}</geometry>'
+            f"<connectors>{''.join(conns)}</connectors></breadboardView>{other}</views></instance>"
+        )
 
     def _wire_xml(self, w):
         (_, _, a, _), (_, _, b, _) = w.ends
         conns = "".join(
             f'<connector connectorId="connector{k}" layer="breadboardWire"><geometry x="0" y="0"/>'
-            f'<connects>{self._connects(w, f"connector{k}")}</connects></connector>' for k in range(2))
-        return (f'<instance moduleIdRef="WireModuleID" modelIndex="{w.idx}" path="{w.path}">'
-                f'<title>{html.escape(w.title)}</title><views><breadboardView layer="breadboardWire">'
-                f'<geometry z="{w.z:.5f}" x="{a[0]:.4f}" y="{a[1]:.4f}" x1="0" y1="0" '
-                f'x2="{b[0] - a[0]:.4f}" y2="{b[1] - a[1]:.4f}" wireFlags="64"/>'
-                f'<wireExtras mils="22.2222" color="{w.color}" opacity="1" banded="0"/>'
-                f'<connectors>{conns}</connectors></breadboardView></views></instance>')
+            f"<connects>{self._connects(w, f'connector{k}')}</connects></connector>"
+            for k in range(2)
+        )
+        return (
+            f'<instance moduleIdRef="WireModuleID" modelIndex="{w.idx}" path="{w.path}">'
+            f'<title>{html.escape(w.title)}</title><views><breadboardView layer="breadboardWire">'
+            f'<geometry z="{w.z:.5f}" x="{a[0]:.4f}" y="{a[1]:.4f}" x1="0" y1="0" '
+            f'x2="{b[0] - a[0]:.4f}" y2="{b[1] - a[1]:.4f}" wireFlags="64"/>'
+            f'<wireExtras mils="22.2222" color="{w.color}" opacity="1" banded="0"/>'
+            f"<connectors>{conns}</connectors></breadboardView></views></instance>"
+        )
 
     @staticmethod
     def _note_xml(n):
         idx, x, y, w, h, text = n
         body = "".join(f"<p>{html.escape(line) or '&#160;'}</p>" for line in text.split("\n"))
-        doc = ('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">'
-               '<html><head><meta name="qrichtext" content="1" /></head>'
-               f'<body style=" font-family:\'Droid Sans\'; font-size:9pt;">{body}</body></html>')
-        return (f'<instance moduleIdRef="NoteModuleID" modelIndex="{idx}" path=":/resources/parts/core/note.fzp">'
-                f'<title>Note{idx}</title><text>{html.escape(doc)}</text><views>'
-                f'<breadboardView layer="breadboardNote"><geometry z="6.5" x="{x}" y="{y}" '
-                f'width="{w}" height="{h}"/></breadboardView></views></instance>')
+        doc = (
+            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">'
+            '<html><head><meta name="qrichtext" content="1" /></head>'
+            f"<body style=\" font-family:'Droid Sans'; font-size:9pt;\">{body}</body></html>"
+        )
+        return (
+            f'<instance moduleIdRef="NoteModuleID" modelIndex="{idx}" path=":/resources/parts/core/note.fzp">'
+            f"<title>Note{idx}</title><text>{html.escape(doc)}</text><views>"
+            f'<breadboardView layer="breadboardNote"><geometry z="6.5" x="{x}" y="{y}" '
+            f'width="{w}" height="{h}"/></breadboardView></views></instance>'
+        )
 
     def save(self, path, name):
         parts = [i for i in self.insts if i.module_id != "WireModuleID"]
-        body = "\n".join([self._part_xml(i) for i in parts] +
-                         [self._wire_xml(w) for w in self.wires] +
-                         [self._note_xml(n) for n in self.notes])
-        fz = f'''<?xml version="1.0" encoding="UTF-8"?>
+        body = "\n".join(
+            [self._part_xml(i) for i in parts]
+            + [self._wire_xml(w) for w in self.wires]
+            + [self._note_xml(n) for n in self.notes]
+        )
+        fz = f"""<?xml version="1.0" encoding="UTF-8"?>
 <module fritzingVersion="1.0.6">
 <views>
 <view name="breadboardView" backgroundColor="#ffffff" gridSize="0.1in" showGrid="1" alignToGrid="1" viewFromBelow="0"/>
@@ -466,17 +544,18 @@ class Sketch:
 {body}
 </instances>
 </module>
-'''
+"""
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
             z.writestr(name + ".fz", fz)
             for k, v in sorted(self.embedded.items()):
                 z.writestr(k, v)
-        fzp = open(os.path.join(self.dir, "core", "Half_breadboard_v2.fzp")).read()
-        buses = [re.findall(r'connectorId="([^"]+)"', body)
-                 for body in re.findall(r'<bus id="[^"]+">(.*?)</bus>', fzp, re.S)]
-        with open(path[:-len(".fzz")] + ".nets.json", "w") as f:
+        with open(os.path.join(self.dir, "core", "Half_breadboard_v2.fzp")) as f:
+            fzp = f.read()
+        buses = [
+            re.findall(r'connectorId="([^"]+)"', body) for body in re.findall(r'<bus id="[^"]+">(.*?)</bus>', fzp, re.S)
+        ]
+        with open(path[: -len(".fzz")] + ".nets.json", "w") as f:
             json.dump({"nets": self.expected, "buses": buses, "svgids": self.svgids}, f, indent=1)
-
 
 
 def pro_micro_files():
@@ -532,7 +611,7 @@ def bc547(sk, title, c_hole):
     q = sk.core(NPN_ID, "transistor_signal_NPN_TO92_CBE.fzp", title, {"part number": "BC547"})
     b = sk.hole(holes[1])
     q.pos = (b[0] - q.legs["connector1"][1][0], b[1] - q.legs["connector1"][1][1])
-    for conn, h in zip(("connector2", "connector1", "connector0"), holes):  # C B E
+    for conn, h in zip(("connector2", "connector1", "connector0"), holes, strict=True):  # C B E
         sk.leg(q, conn, h)
     return q
 
@@ -556,7 +635,7 @@ def common(sk, jfp_at):
     q1 = bc547(sk, "Q1 BC547", "pin20E")
     r1 = resistor(sk, "R1 10k", "10kΩ", "pin17D", "pin21D")
     d1 = sk.core(DIODE_ID, "sparkfun-discretesemi-diode-1n4148_v2.fzp", "D1 1N4148")
-    d1.place("connector1", sk.hole("pin21C"))   # cathode (band) on the base column
+    d1.place("connector1", sk.hole("pin21C"))  # cathode (band) on the base column
     sk.plug(d1, "connector1", "pin21C")
     sk.plug(d1, "connector0", "pin25C")
     r2 = resistor(sk, "R2 10k", "10kΩ", "pin20B", "pin24B")
@@ -565,14 +644,20 @@ def common(sk, jfp_at):
     sk.wire("pin25B", "pin25X", BLACK, "D1 anode to -")
     sk.wire("pin20A", "pin3B", YELLOW, "Q1 C to Pro Micro RX")
 
-    jc = sk.embed(JCOM1_ID, "JCOM1",
-                  msi_header(JCOM1_ID, "JCOM1", MSI_JCOM1, "MSI serial header (NAS)", True).files())
+    jc = sk.embed(
+        JCOM1_ID,
+        "JCOM1",
+        msi_header(JCOM1_ID, "JCOM1", MSI_JCOM1, "MSI serial header (NAS)", True).files(),
+    )
     jc.place("connector0", (130, 235))
     sk.wire("pin17C", (jc, "connector2"), ORANGE, "JCOM1 3 SOUT to R1")
     sk.wire("pin29X", (jc, "connector4"), BLACK, "JCOM1 5 GND to -")
 
-    jf = sk.embed(JFP1_ID, "JFP1",
-                  msi_header(JFP1_ID, "JFP1", MSI_JFP1, "MSI front panel header (NAS)", False).files())
+    jf = sk.embed(
+        JFP1_ID,
+        "JFP1",
+        msi_header(JFP1_ID, "JFP1", MSI_JFP1, "MSI front panel header (NAS)", False).files(),
+    )
     jf.place("connector1", jfp_at)
 
     for k, part in enumerate((pm, q1, r1, d1, r2, jc, jf)):
@@ -582,9 +667,18 @@ def common(sk, jfp_at):
     pmn = lambda pin: ("Pro Micro", pm_conn(pin))
     nets = {
         "+5V": [pmn("VCC"), ("R2 10k", "connector1")],
-        "GND": [pmn("GND"), ("Q1 BC547", "connector0"), ("D1 1N4148", "connector0"), ("JCOM1", "connector4")],
+        "GND": [
+            pmn("GND"),
+            ("Q1 BC547", "connector0"),
+            ("D1 1N4148", "connector0"),
+            ("JCOM1", "connector4"),
+        ],
         "SOUT": [("JCOM1", "connector2"), ("R1 10k", "connector0")],
-        "Q1 base": [("R1 10k", "connector1"), ("D1 1N4148", "connector1"), ("Q1 BC547", "connector1")],
+        "Q1 base": [
+            ("R1 10k", "connector1"),
+            ("D1 1N4148", "connector1"),
+            ("Q1 BC547", "connector1"),
+        ],
         "RX": [("Q1 BC547", "connector2"), ("R2 10k", "connector0"), pmn("RX")],
         "PWR SW 6": [("JFP1", "connector5")],
     }
@@ -593,7 +687,7 @@ def common(sk, jfp_at):
 
 def bench_relay(parts):
     sk = Sketch(parts)
-    pm, jf, nets = common(sk, (420, 235))
+    _, jf, nets = common(sk, (420, 235))
     rel = sk.embed(RELAY_ID, "Relay board", relay_board().files())
     rel.place("connector0", (345, 60))
     rel.sch, rel.pcb = (600, 200), (360, 120)
@@ -613,31 +707,36 @@ def bench_relay(parts):
     nets["PWR SW 6"].append(title(term(1, "COM")))
     nets["PWR SW 8"] = [("JFP1", "connector7"), title(term(1, "NO"))]
     sk.check(nets)
-    sk.note(600, 0, 400, 240,
-            "Этап A (BENCH.md A1–A3), прошивка flash-relay.\n"
-            "Pro Micro питается по USB от laptop.\n"
-            "Реле-плата: гнёзда 1 (3V3) и 2 (5V) на «+»,\n"
-            "6 (GND) на «−», 37 (CH1) на Pro Micro 4.\n"
-            "Без гнезда 1 оптопара не питается, реле молчит.\n"
-            "Relay_JMP: перемычка на CH1 (IN_CH1–P25)\n"
-            "обязательна, без неё 37 ни к чему не подключено.\n"
-            "Порядок CH1–CH3 и NC/COM/NO на картинке\n"
-            "условный: сверь с надписями на плате.\n"
-            "Кнопку корпуса с JFP1 6/8 на время теста снять.\n"
-            "JFP1/JCOM1: распиновка по мануалу MSI.")
+    sk.note(
+        600,
+        0,
+        400,
+        240,
+        "Этап A (BENCH.md A1–A3), прошивка flash-relay.\n"
+        "Pro Micro питается по USB от laptop.\n"
+        "Реле-плата: гнёзда 1 (3V3) и 2 (5V) на «+»,\n"
+        "6 (GND) на «−», 37 (CH1) на Pro Micro 4.\n"
+        "Без гнезда 1 оптопара не питается, реле молчит.\n"
+        "Relay_JMP: перемычка на CH1 (IN_CH1–P25)\n"
+        "обязательна, без неё 37 ни к чему не подключено.\n"
+        "Порядок CH1–CH3 и NC/COM/NO на картинке\n"
+        "условный: сверь с надписями на плате.\n"
+        "Кнопку корпуса с JFP1 6/8 на время теста снять.\n"
+        "JFP1/JCOM1: распиновка по мануалу MSI.",
+    )
     return sk
 
 
 def bench_transistor(parts):
     sk = Sketch(parts)
-    pm, jf, nets = common(sk, (330, 235))
-    bc547(sk, "Q2 BC547", "pin24F")        # C 24, B 25, E 26
+    _, jf, nets = common(sk, (330, 235))
+    bc547(sk, "Q2 BC547", "pin24F")  # C 24, B 25, E 26
     resistor(sk, "R3 2.2k", "2.2kΩ", "pin21I", "pin25I")
     r4 = sk.core(RES_ID, "resistor.fzp", "R4 10k", {"resistance": "10kΩ", "pin spacing": "400 mil"})
     a, b = sk.hole("pin25J"), sk.hole("pin21Z")
     r4.pos = ((a[0] + b[0]) / 2 - r4.size[0] / 2, (a[1] + b[1]) / 2 - r4.size[1] / 2)
     sk.leg(r4, "connector0", "pin25J")
-    sk.leg(r4, "connector1", "pin21Z")      # straight into the GND rail
+    sk.leg(r4, "connector1", "pin21Z")  # straight into the GND rail
     sk.wire("pin8C", "pin21G", GREEN, "Pro Micro 4 to R3")
     sk.wire("pin26G", "pin25Z", BLACK, "Q2 E to -")
     sk.wire("pin24G", (jf, "connector5"), BLUE, "Q2 C to JFP1 hot pin")
@@ -646,17 +745,26 @@ def bench_transistor(parts):
         inst.sch, inst.pcb = (k * 200, 400), (k * 120, 240)
     nets["GND"] += [("Q2 BC547", "connector0"), ("R4 10k", "connector1")]
     nets["D4"] = [("Pro Micro", pm_conn("4")), ("R3 2.2k", "connector0")]
-    nets["Q2 base"] = [("R3 2.2k", "connector1"), ("R4 10k", "connector0"), ("Q2 BC547", "connector1")]
+    nets["Q2 base"] = [
+        ("R3 2.2k", "connector1"),
+        ("R4 10k", "connector0"),
+        ("Q2 BC547", "connector1"),
+    ]
     nets["PWR SW 6"].append(("Q2 BC547", "connector2"))
     sk.check(nets)
-    sk.note(600, 0, 400, 220,
-            "Этап B (BENCH.md B1–B3), прошивка flash-transistor.\n"
-            "Q2 C идёт на «горячий» пин PWR SW (≈3,3 V, замер B1).\n"
-            "Нарисован JFP1 6; если горячий 8 — перекинь провод.\n"
-            "Второй пин PWR SW не подключать: земля общая\n"
-            "через JCOM1 5.\n"
-            "R4 держит Q2 закрытым, пока Pro Micro\n"
-            "прошивается или перезагружается.")
+    sk.note(
+        600,
+        0,
+        400,
+        220,
+        "Этап B (BENCH.md B1–B3), прошивка flash-transistor.\n"
+        "Q2 C идёт на «горячий» пин PWR SW (≈3,3 V, замер B1).\n"
+        "Нарисован JFP1 6; если горячий 8 — перекинь провод.\n"
+        "Второй пин PWR SW не подключать: земля общая\n"
+        "через JCOM1 5.\n"
+        "R4 держит Q2 закрытым, пока Pro Micro\n"
+        "прошивается или перезагружается.",
+    )
     return sk
 
 
