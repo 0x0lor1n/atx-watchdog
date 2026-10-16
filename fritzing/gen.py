@@ -158,7 +158,8 @@ def relay_board():
     w, h = 65 * MM, 56.5 * MM
     p = GenPart(RELAY_ID, "Waveshare RPi Relay Board", "K", "relay module",
                 "3-channel relay HAT. CH1/CH2/CH3 = header pins 37/38/40 (BCM 26/20/21), "
-                "active LOW. Powered from header pins 2 (5V), 1 (3V3), 6 (GND).",
+                "active LOW, only through the Relay_JMP jumpers. Powered from header "
+                "pins 2 (5V), 1 (3V3, optocoupler side), 6 (GND).",
                 w, h, "female")
     a = p.art
     a.append(f'<rect x="0" y="0" width="{w:.2f}" height="{h:.2f}" rx="10" fill="#1e5aa8"/>')
@@ -613,12 +614,16 @@ def bench_relay(parts):
     hdr = lambda n: (rel, f"connector{n - 1}")
     term = lambda ch, t: (rel, f"connector{40 + (ch - 1) * 3 + ('NC', 'COM', 'NO').index(t)}")
     sk.wire("pin31Y", hdr(2), RED, "relay 5V")
+    # Header pin 1 feeds the optocoupler LEDs and the IN_CH pull-ups (Waveshare
+    # schematic: 3.3V -> R1 1k -> PC817 -> LED1 -> IN_CH1). The Pro Micro has
+    # no 3V3 out; 5V on that net is fine (pin HIGH = 4.8 V, LED stays off).
+    sk.wire("pin29Y", hdr(1), ORANGE, "relay 3V3 from +5V")
     sk.wire("pin30Z", hdr(6), BLACK, "relay GND")
     sk.wire("pin8C", hdr(37), GREEN, "Pro Micro 4 to relay CH1")
     sk.wire(term(1, "COM"), (jf, "connector5"), BLUE, "CH1 COM to JFP1 6")
     sk.wire(term(1, "NO"), (jf, "connector7"), BLUE, "CH1 NO to JFP1 8")
     title = lambda c: ("Relay board", c[1])
-    nets["+5V"].append(title(hdr(2)))
+    nets["+5V"] += [title(hdr(2)), title(hdr(1))]
     nets["GND"].append(title(hdr(6)))
     nets["D4"] = [("Pro Micro", pm_conn("4")), title(hdr(37))]
     nets["PWR SW 6"].append(title(term(1, "COM")))
@@ -627,9 +632,11 @@ def bench_relay(parts):
     sk.note(600, 0, 400, 240,
             "Этап A (BENCH.md A1–A3), прошивка flash-relay.\n"
             "Pro Micro питается по USB от laptop.\n"
-            "Реле-плата: гнёзда 2 (5V), 6 (GND), 37 (CH1).\n"
-            "Реле не щёлкает — ещё гнездо 1 (3V3) на «+».\n"
-            "Relay_JMP не трогать.\n"
+            "Реле-плата: гнёзда 1 (3V3) и 2 (5V) на «+»,\n"
+            "6 (GND) на «−», 37 (CH1) на Pro Micro 4.\n"
+            "Без гнезда 1 оптопара не питается, реле молчит.\n"
+            "Relay_JMP: перемычка на CH1 (IN_CH1–P25)\n"
+            "обязательна, без неё 37 ни к чему не подключено.\n"
             "Порядок CH1–CH3 и NC/COM/NO на картинке\n"
             "условный: сверь с надписями на плате.\n"
             "Кнопку корпуса с JFP1 6/8 на время теста снять.\n"
