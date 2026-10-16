@@ -17,7 +17,8 @@ power-cycles the box on its own if `ALIVE` stops. See
 [docs/poc/schematic.svg](docs/poc/schematic.svg) (schemdraw),
 [docs/poc/wiring.svg](docs/poc/wiring.svg) and
 [docs/final/wiring.svg](docs/final/wiring.svg) (d2, bench wiring),
-[docs/BENCH.md](docs/BENCH.md).
+[docs/BENCH.md](docs/BENCH.md). Each drawing also has a `.png` next to it
+for chats and phones.
 
 ## Install
 
@@ -30,8 +31,8 @@ flash-transistor       # final firmware (BC547,       pin 4 active HIGH)
 fizzel-poc             # breadboard layout in Fritzing: docs/poc/bench.fzz
 fizzel-final           #                                docs/final/bench.fzz
 picocom -b 115200 --omap crlf --echo /dev/ttyACM0
-nix flake check        # firmware sim, NixOS VM, Fritzing lint
-nix build .#schematic  # regenerate docs/poc/schematic.svg from schematic/poc.py
+nix flake check        # firmware sim, NixOS VM, Fritzing lint, docs up to date
+render-docs            # docs/*/{schematic,wiring}.{svg,png} from schematic/poc.py and wiring.d2
 ```
 
 Entering the shell installs the git hooks (lefthook.yml). pre-commit: gitleaks, nixfmt,

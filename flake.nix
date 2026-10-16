@@ -118,13 +118,41 @@
                 python3 ${./fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
               '';
 
-          # docs/<stage>/schematic.svg is tracked; this regenerates it from schematic/<stage>.py.
-          schematic =
-            pkgs.runCommand "nas-power-button-schematic" { nativeBuildInputs = [ (python pkgs) ]; }
+          # docs/<stage>/{schematic,wiring}.{svg,png} are tracked; `render-docs` in the
+          # devshell copies this output over them. SVG for GitHub, PNG for chats and
+          # phones: Telegram's preview drops schemdraw's <use>-glyph text, and d2 embeds
+          # its font as @font-face, which resvg ignores, so the PNG pass substitutes a
+          # real font-family before rasterising.
+          docs =
+            pkgs.runCommand "nas-power-button-docs"
+              {
+                nativeBuildInputs = [
+                  (python pkgs)
+                  pkgs.d2
+                  pkgs.resvg
+                ];
+              }
               ''
-                mkdir -p $out/poc
+                mkdir -p $out/poc $out/final
                 python3 ${./schematic}/poc.py $out/poc/schematic.svg
+                resvg --zoom 3 --background white $out/poc/schematic.svg $out/poc/schematic.png
+
+                for stage in poc final; do
+                  d2 ${./docs}/$stage/wiring.d2 $out/$stage/wiring.svg
+                  sed -E 's/font-family: "?d2-[0-9]+-font-(bold|italic|regular)"?/font-family: "Source Sans 3"/' \
+                    $out/$stage/wiring.svg > wiring-$stage.svg
+                  resvg --skip-system-fonts --use-fonts-dir ${pkgs.source-sans}/share/fonts \
+                    --font-family "Source Sans 3" wiring-$stage.svg $out/$stage/wiring.png
+                done
               '';
+
+          render-docs = pkgs.writeShellApplication {
+            name = "render-docs";
+            text = ''
+              cp -r --no-preserve=mode "$(nix build --no-link --print-out-paths .#docs)"/. docs/
+              git -C docs status --short .
+            '';
+          };
 
           fizzel-poc = mkFizzel "poc";
           fizzel-final = mkFizzel "final";
@@ -164,6 +192,7 @@
             flash-transistor
             fizzel-poc
             fizzel-final
+            render-docs
             pkgs.avrdude
             pkgs.picocom
             pkgs.d2
@@ -187,10 +216,9 @@
               fizzel-poc                docs/poc/bench.fzz   in Fritzing
               fizzel-final              docs/final/bench.fzz in Fritzing
               picocom -b 115200 --omap crlf --echo /dev/ttyACM0
-              d2 docs/<stage>/wiring.d2 docs/<stage>/wiring.svg
-              nix flake check           sim + NixOS VM + Fritzing lint
+              nix flake check           sim + NixOS VM + Fritzing lint + docs-fresh
               nix build .#bench-fzz     regenerate bench.fzz from fritzing/gen.py
-              nix build .#schematic     regenerate docs/poc/schematic.svg from schematic/poc.py
+              render-docs               regenerate docs/*/{schematic,wiring}.{svg,png} from schematic/poc.py and wiring.d2
               lefthook run pre-commit   what the commit hook runs (nixfmt, deadnix, statix, ruff, clang-format, cppcheck)
               lefthook run pre-push     what the push hook runs (nix flake check)
             HELP
@@ -214,6 +242,15 @@
         {
           sim-relay = sim "relay" "";
           sim-transistor = sim "transistor" "-DBUTTON_ACTIVE_HIGH";
+          # The tracked SVGs must be what their sources render to; PNGs are not
+          # compared, resvg output is not byte-stable across versions.
+          docs-fresh = pkgs.runCommand "docs-fresh" { } ''
+            for f in poc/schematic.svg poc/wiring.svg final/wiring.svg; do
+              cmp -s ${self.packages.${pkgs.stdenv.hostPlatform.system}.docs}/$f ${./docs}/$f \
+                || { echo "docs/$f is stale, run render-docs" >&2; exit 1; }
+            done
+            touch $out
+          '';
           vm = pkgs.testers.runNixOSTest (import ./test/vm.nix self);
           # Lints what Fritzing saved, not what gen.py placed: the two differ after a GUI edit.
           bench-lint = pkgs.runCommand "bench-lint" { nativeBuildInputs = [ pkgs.python3 ]; } ''

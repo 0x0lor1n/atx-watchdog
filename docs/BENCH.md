@@ -2,7 +2,7 @@
 
 Два этапа: сначала реле-плата (полярность кнопки не важна, ошибка ничего не
 сожжёт), потом то же самое на BC547 — это финальная схема, её потом паяем.
-Принципиальная схема PoC: [poc/schematic.svg](poc/schematic.svg). Разводка макеток: [poc/wiring.svg](poc/wiring.svg) и [final/wiring.svg](final/wiring.svg).
+Принципиальная схема PoC: [poc/schematic.svg](poc/schematic.svg). Разводка макеток: [poc/wiring.svg](poc/wiring.svg) и [final/wiring.svg](final/wiring.svg). Рядом с каждой лежит `.png` — для телеги и телефона.
 Раскладка макетки — `fizzel-poc` / `fizzel-final` (см. ниже). Колонки/ряды
 на картинке — предложение, не обязательство: важны цепи.
 
@@ -17,9 +17,8 @@
 | `fizzel-poc` | открыть `docs/poc/bench.fzz` в Fritzing |
 | `fizzel-final` | открыть `docs/final/bench.fzz` в Fritzing |
 | `picocom -b 115200 --omap crlf --echo /dev/ttyACM0` | консоль к Pro Micro |
-| `d2 docs/poc/wiring.d2 docs/poc/wiring.svg` | перерисовать разводку после правки `.d2` |
-| `nix build .#schematic` | перерисовать `docs/poc/schematic.svg` после правки `schematic/poc.py` |
-| `nix flake check` | sim прошивки, NixOS VM, Fritzing-lint макеток |
+| `render-docs` | перерисовать `docs/*/{schematic,wiring}.{svg,png}` после правки `schematic/poc.py` или `wiring.d2` |
+| `nix flake check` | sim прошивки, NixOS VM, Fritzing-lint макеток, свежесть `docs/` |
 | `nix build .#bench-fzz` | перегенерировать `bench.fzz` из `fritzing/gen.py` |
 
 `port` по умолчанию `/dev/ttyACM0`. `avrdude` тоже в шелле, если надо руками.

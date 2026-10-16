@@ -1,9 +1,10 @@
 direction: right
+style.fill: "#16161d"
 
 classes: {
   board: {style: {fill: "#1f1f28"; stroke: "#7e9cd8"; font-color: "#dcd7ba"; stroke-width: 2; border-radius: 6; bold: true}}
-  pin: {style: {fill: "#2a2a37"; stroke: "#54546d"; font-color: "#dcd7ba"; font-size: 14}}
-  part: {style: {fill: "#2a2a37"; stroke: "#98bb6c"; font-color: "#dcd7ba"; font-size: 14}}
+  pin: {style: {fill: "#2a2a37"; stroke: "#54546d"; font-color: "#dcd7ba"; font-size: 20}}
+  part: {style: {fill: "#2a2a37"; stroke: "#98bb6c"; font-color: "#dcd7ba"; font-size: 20}}
   pwr: {style: {stroke: "#ff5d62"; stroke-width: 3; font-color: "#ff5d62"}}
   gnd: {style: {stroke: "#727169"; stroke-width: 3; font-color: "#727169"}}
   data: {style: {stroke: "#e6c384"; stroke-width: 3; font-color: "#e6c384"}}
@@ -14,7 +15,7 @@ classes: {
 title: "FINAL: JCOM1 -> inverter -> Pro Micro -> BC547 -> JFP1" {
   near: top-center
   shape: text
-  style: {font-color: "#dcd7ba"; font-size: 22; bold: true}
+  style: {font-color: "#dcd7ba"; font-size: 30; bold: true}
 }
 
 mb: "MSI B250M PRO-VD (NAS)" {
@@ -73,5 +74,5 @@ sw.q2 -> mb.jfp.hot: "Q2 collector pulls PWR SW to GND" {class: btn}
 note: "all GNDs are one common ground (ATX pin 7 = JCOM1 pin 5 = PWR SW GND pin)\nfirmware: flash-transistor (BUTTON_ACTIVE_HIGH)" {
   near: bottom-center
   shape: text
-  style: {font-color: "#e6c384"; font-size: 20; italic: true}
+  style: {font-color: "#e6c384"; font-size: 24; italic: true}
 }
