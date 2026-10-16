@@ -47,7 +47,7 @@ struct FakeSerial {
 };
 static FakeSerial Serial, Serial1;
 
-#include "../firmware/poc/firmware.ino"
+#include "../src/firmware/firmware.ino"
 
 #ifdef BUTTON_ACTIVE_HIGH
 static const int PRESSED = HIGH, RELEASED = LOW;

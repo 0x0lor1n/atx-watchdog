@@ -17,9 +17,9 @@
 | `fizzel-poc` | открыть `docs/poc/bench.fzz` в Fritzing |
 | `fizzel-final` | открыть `docs/final/bench.fzz` в Fritzing |
 | `picocom -b 115200 --omap crlf --echo /dev/ttyACM0` | консоль к Pro Micro |
-| `render-docs` | перерисовать `docs/*/{schematic,wiring}.{svg,png}` после правки `schematic/poc.py` или `wiring.d2` |
+| `render-docs` | перерисовать `docs/*/{schematic,wiring}.{svg,png}` после правки `src/schematic/poc.py` или `wiring.d2` |
 | `nix flake check` | sim прошивки, NixOS VM, Fritzing-lint макеток, свежесть `docs/` |
-| `nix build .#bench-fzz` | перегенерировать `bench.fzz` из `fritzing/gen.py` |
+| `nix build .#bench-fzz` | перегенерировать `bench.fzz` из `src/fritzing/gen.py` |
 
 `port` по умолчанию `/dev/ttyACM0`. `avrdude` тоже в шелле, если надо руками.
 

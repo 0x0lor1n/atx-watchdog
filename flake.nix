@@ -33,7 +33,7 @@
             name: extraFlags:
             pkgs.runCommand "nas-power-button-${name}" { } ''
               mkdir -p build sketch/firmware $out
-              cp ${./firmware/poc/firmware.ino} sketch/firmware/firmware.ino
+              cp ${./src/firmware/firmware.ino} sketch/firmware/firmware.ino
               ${core}/arduino-builder \
                 -hardware ${core}/hardware \
                 -tools ${core}/tools-builder \
@@ -115,7 +115,7 @@
           bench-fzz =
             pkgs.runCommand "nas-power-button-bench-fzz" { nativeBuildInputs = [ pkgs.python3 ]; }
               ''
-                python3 ${./fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
+                python3 ${./src/fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
               '';
 
           # docs/<stage>/{schematic,wiring}.{svg,png} are tracked; `render-docs` in the
@@ -134,7 +134,7 @@
               }
               ''
                 mkdir -p $out/poc $out/final
-                python3 ${./schematic}/poc.py $out/poc/schematic.svg
+                python3 ${./src/schematic}/poc.py $out/poc/schematic.svg
                 resvg --zoom 3 --background white $out/poc/schematic.svg $out/poc/schematic.png
 
                 for stage in poc final; do
@@ -217,8 +217,8 @@
               fizzel-final              docs/final/bench.fzz in Fritzing
               picocom -b 115200 --omap crlf --echo /dev/ttyACM0
               nix flake check           sim + NixOS VM + Fritzing lint + docs-fresh
-              nix build .#bench-fzz     regenerate bench.fzz from fritzing/gen.py
-              render-docs               regenerate docs/*/{schematic,wiring}.{svg,png} from schematic/poc.py and wiring.d2
+              nix build .#bench-fzz     regenerate bench.fzz from src/fritzing/gen.py
+              render-docs               regenerate docs/*/{schematic,wiring}.{svg,png} from src/schematic/poc.py and wiring.d2
               lefthook run pre-commit   what the commit hook runs (nixfmt, deadnix, statix, ruff, clang-format, cppcheck)
               lefthook run pre-push     what the push hook runs (nix flake check)
             HELP
@@ -232,8 +232,8 @@
           sim =
             name: flags:
             pkgs.runCommandCC "sim-${name}" { } ''
-              mkdir -p test firmware/poc
-              cp ${./firmware/poc/firmware.ino} firmware/poc/firmware.ino
+              mkdir -p test src/firmware
+              cp ${./src/firmware/firmware.ino} src/firmware/firmware.ino
               cp ${./test/sim.cpp} test/sim.cpp
               $CXX -std=c++17 -Wall -Werror -Wno-unused-function ${flags} test/sim.cpp -o sim
               ./sim | tee $out
@@ -258,9 +258,9 @@
             cp ${self.packages.${pkgs.stdenv.hostPlatform.system}.bench-fzz}/* . && chmod u+w *
             ${pkgs.fritzing}/bin/Fritzing -svg $PWD > /dev/null 2>&1
             for s in bench-relay bench-transistor; do
-              python3 ${./fritzing}/lint.py $s.fzz ''${s}_breadboard.svg $s.nets.json
+              python3 ${./src/fritzing}/lint.py $s.fzz ''${s}_breadboard.svg $s.nets.json
             done
-            python3 ${./fritzing}/lint_test.py ${pkgs.fritzing}/bin/Fritzing $PWD | tee $out
+            python3 ${./src/fritzing}/lint_test.py ${pkgs.fritzing}/bin/Fritzing $PWD | tee $out
           '';
         }
       );

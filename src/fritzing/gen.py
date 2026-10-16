@@ -138,7 +138,7 @@ class GenPart:
  <version>1</version>
  <title>{html.escape(self.title)}</title>
  <label>{self.label}</label>
- <author>nas-power-button/fritzing/gen.py</author>
+ <author>nas-power-button/src/fritzing/gen.py</author>
  <description>{html.escape(self.desc)}</description>
  <tags><tag>nas-power-button</tag></tags>
  <properties><property name="family">{html.escape(self.family)}</property></properties>

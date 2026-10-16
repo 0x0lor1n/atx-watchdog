@@ -1,4 +1,4 @@
 result*
-/bench/
-__pycache__/
 .direnv/
+__pycache__/
+.ruff_cache/

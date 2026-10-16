@@ -22,31 +22,18 @@ for chats and phones.
 
 ## Install
 
-Nix with flakes enabled, direnv (`use flake` in `.envrc`).
-
-```
-nix develop            # or: direnv allow
-flash-relay            # PoC firmware   (relay board, pin 4 active LOW)
-flash-transistor       # final firmware (BC547,       pin 4 active HIGH)
-fizzel-poc             # breadboard layout in Fritzing: docs/poc/bench.fzz
-fizzel-final           #                                docs/final/bench.fzz
-picocom -b 115200 --omap crlf --echo /dev/ttyACM0
-nix flake check        # firmware sim, NixOS VM, Fritzing lint, docs up to date
-render-docs            # docs/*/{schematic,wiring}.{svg,png} from schematic/poc.py and wiring.d2
-```
-
-Entering the shell installs the git hooks (lefthook.yml). pre-commit: gitleaks, nixfmt,
-deadnix, statix, ruff, clang-format, cppcheck on staged files. pre-push:
-`nix flake check`.
+Nix with flakes enabled, direnv (`use flake` in `.envrc`). `nix develop`
+prints the available commands and installs the git hooks (lefthook.yml):
+linters and formatters on commit, `nix flake check` on push.
 
 NAS side: import `nixosModules.default`, see `module.nix`.
 
 ## Two ideas worth stealing
 
-**Generated, linted breadboards.** `fritzing/gen.py` places parts by
+**Generated, linted breadboards.** `src/fritzing/gen.py` places parts by
 "this pin goes into that hole", using hole and pin coordinates from the
 parts' own SVGs, and traces the resulting nets through the breadboard
-strips against the schematic. Then `fritzing/lint.py` re-reads what
+strips against the schematic. Then `src/fritzing/lint.py` re-reads what
 Fritzing actually rendered, so a pin that drifted off its hole or a wire on
 the wrong row fails `nix flake check` instead of the bench.
 
@@ -55,20 +42,6 @@ the wrong row fails `nix flake check` instead of the bench.
 command parser, button timings and the watchdog state machine.
 `test/vm.nix` boots the NixOS module in a VM and checks what reaches the
 COM port on `poweroff`, `reboot` and a stopped heartbeat.
-
-## Layout
-
-```
-firmware/poc/      sketch (one source, two builds: relay / transistor)
-module.nix         NixOS module: heartbeat, shutdown hooks, panic sysctls
-docs/poc/          schematic.svg, wiring.d2 + svg, bench.fzz   (Waveshare relay board)
-schematic/         schemdraw sources for docs/*/schematic.svg
-docs/final/        wiring.d2 + svg, bench.fzz   (BC547)
-docs/schemas/      vendor schematics: Pro Micro, RPi Relay Board
-docs/BENCH.md      step-by-step bench procedure
-fritzing/          gen.py, lint.py, svgpins.py, vendored Pro Micro part
-test/              sim.cpp, vm.nix
-```
 
 ## Mistakes so far
 
