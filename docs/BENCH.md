@@ -2,9 +2,9 @@
 
 Два этапа: сначала реле-плата (полярность кнопки не важна, ошибка ничего не
 сожжёт), потом то же самое на BC547 — это финальная схема, её потом паяем.
-Схемы: /srv/workspace/projects/hive-plans/nas/power-button/*.png
-Раскладка макетки в Fritzing: `nix run .#bench` (копирует bench-relay.fzz и
-bench-transistor.fzz в ./bench/ и открывает; правки остаются там).
+Схемы: poc/wiring.svg и final/wiring.svg
+Раскладка макетки в Fritzing: `fizzel-poc` / `fizzel-final` в devshell
+(открывает docs/poc/bench.fzz и docs/final/bench.fzz).
 Колонки/ряды на картинке — предложение, не обязательство: важны цепи.
 
 ## Детали

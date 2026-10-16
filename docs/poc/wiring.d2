@@ -1,0 +1,83 @@
+direction: right
+
+classes: {
+  board: {style: {fill: "#1f1f28"; stroke: "#7e9cd8"; font-color: "#dcd7ba"; stroke-width: 2; border-radius: 6; bold: true}}
+  pin: {style: {fill: "#2a2a37"; stroke: "#54546d"; font-color: "#dcd7ba"; font-size: 14}}
+  part: {style: {fill: "#2a2a37"; stroke: "#98bb6c"; font-color: "#dcd7ba"; font-size: 14}}
+  pwr: {style: {stroke: "#ff5d62"; stroke-width: 3; font-color: "#ff5d62"}}
+  gnd: {style: {stroke: "#727169"; stroke-width: 3; font-color: "#727169"}}
+  data: {style: {stroke: "#e6c384"; stroke-width: 3; font-color: "#e6c384"}}
+  ctl: {style: {stroke: "#7fb4ca"; stroke-width: 3; font-color: "#7fb4ca"}}
+  btn: {style: {stroke: "#98bb6c"; stroke-width: 3; font-color: "#98bb6c"}}
+}
+
+title: "POC: JCOM1 -> inverter -> Pro Micro -> Waveshare relay -> JFP1" {
+  near: top-center
+  shape: text
+  style: {font-color: "#dcd7ba"; font-size: 22; bold: true}
+}
+
+mb: "MSI B250M PRO-VD (NAS)" {
+  class: board
+  atx: "24-pin ATX" {
+    class: board
+    p9: "pin 9  5VSB (+5 V)" {class: pin}
+    p7: "pin 7  GND" {class: pin}
+  }
+  com: "JCOM1" {
+    class: board
+    p3: "pin 3  SOUT (TX, ±12 V)" {class: pin}
+    p5: "pin 5  GND" {class: pin}
+  }
+  jfp: "JFP1" {
+    class: board
+    p6: "pin 6  PWR SW" {class: pin}
+    p8: "pin 8  PWR SW" {class: pin}
+  }
+}
+
+lvl: "RS-232 -> TTL (inverter)" {
+  class: board
+  r1: "R1 10k  (to base)" {class: part}
+  d1: "D1 1N4148  base-GND, cathode on base" {class: part}
+  q1: "Q1 BC547  E = GND" {class: part}
+  r2: "R2 10k  collector pull-up to 5 V" {class: part}
+}
+
+pm: "Pro Micro 5 V / 16 MHz" {
+  class: board
+  vcc: "VCC" {class: pin}
+  gnd: "GND" {class: pin}
+  rx: "pin 0  RX (Serial1)" {class: pin}
+  p4: "pin 4  -> relay (LOW = press)" {class: pin}
+  usb: "USB: flashing / debug only" {class: pin}
+}
+
+rel: "Waveshare RPi Relay Board" {
+  class: board
+  v33: "header 1  3V3 (opto side; 5 V ok)" {class: pin}
+  v5: "header 2  5V (coils)" {class: pin}
+  g: "header 6  GND" {class: pin}
+  ch1: "header 37  CH1 IN  (jumper CH1 on!)" {class: pin}
+  com: "CH1 COM" {class: pin}
+  no: "CH1 NO" {class: pin}
+}
+
+mb.com.p3 -> lvl.r1: "SOUT" {class: data}
+lvl.r2 -> pm.rx: "clean 0/5 V" {class: data}
+mb.atx.p9 -> pm.vcc: "5VSB" {class: pwr}
+mb.atx.p9 -> lvl.r2: "5 V" {class: pwr}
+mb.atx.p9 -> rel.v5: "5VSB" {class: pwr}
+mb.atx.p9 -> rel.v33 {class: pwr}
+mb.atx.p7 -> pm.gnd: "GND" {class: gnd}
+mb.com.p5 -> lvl.q1: "GND" {class: gnd}
+mb.atx.p7 -> rel.g: "GND" {class: gnd}
+pm.p4 -> rel.ch1: "LOW = closed" {class: ctl}
+mb.jfp.p6 <- rel.com: "parallel to case button" {class: btn}
+mb.jfp.p8 <- rel.no {class: btn}
+
+note: "all GNDs are one common ground (ATX pin 7 = JCOM1 pin 5)\non the bench: VCC and 5 V from USB instead of 5VSB, never both\nfinal build swaps the relay board for a BC547: docs/final" {
+  near: bottom-center
+  shape: text
+  style: {font-color: "#e6c384"; font-size: 20; italic: true}
+}

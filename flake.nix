@@ -18,7 +18,7 @@
           # Pro Micro 5 V/16 MHz runs the Leonardo build unchanged (same MCU, Caterina loader).
           mkFirmware = name: extraFlags: pkgs.runCommand "nas-power-button-${name}" { } ''
             mkdir -p build sketch/firmware $out
-            cp ${./firmware/firmware.ino} sketch/firmware/firmware.ino
+            cp ${./firmware/poc/firmware.ino} sketch/firmware/firmware.ino
             ${core}/arduino-builder \
               -hardware ${core}/hardware \
               -tools ${core}/tools-builder \
@@ -76,6 +76,16 @@
                 -U flash:w:${fw}/firmware.hex:i
             '';
           };
+          # Opens a bench sketch in Fritzing. Edits land in docs/<stage>/bench.fzz
+          # (tracked); `nix build .#bench-fzz` regenerates both from gen.py.
+          mkFizzel = stage: pkgs.writeShellApplication {
+            name = "fizzel-${stage}";
+            text = ''
+              f=''${1:-docs/${stage}/bench.fzz}
+              [ -e "$f" ] || { echo "no $f: run from the repo root"; exit 1; }
+              exec ${pkgs.fritzing}/bin/Fritzing "$f"
+            '';
+          };
         in
         rec {
           # Pin 4 active LOW: Waveshare relay board.
@@ -93,19 +103,8 @@
             python3 ${./fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
           '';
 
-          # Opens the sketches with Fritzing; edits go to a copy, not the store.
-          bench = pkgs.writeShellApplication {
-            name = "bench";
-            text = ''
-              dir=''${1:-$PWD/bench}
-              mkdir -p "$dir"
-              for f in ${bench-fzz}/*.fzz; do
-                [ -e "$dir/''${f##*/}" ] || install -m 644 "$f" "$dir/"
-              done
-              exec ${pkgs.fritzing}/bin/Fritzing "$dir"/bench-*.fzz
-            '';
-          };
-
+          fizzel-poc = mkFizzel "poc";
+          fizzel-final = mkFizzel "final";
           default = firmware-relay;
         });
 
@@ -114,23 +113,35 @@
           type = "app";
           program = "${pkgs.fritzing}/bin/Fritzing";
         };
-        bench = {
+        fizzel-poc = {
           type = "app";
-          program = "${self.packages.${pkgs.system}.bench}/bin/bench";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.fizzel-poc}/bin/fizzel-poc";
+        };
+        fizzel-final = {
+          type = "app";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.fizzel-final}/bin/fizzel-final";
         };
         flash-relay = {
           type = "app";
-          program = "${self.packages.${pkgs.system}.flash-relay}/bin/flash-relay";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.flash-relay}/bin/flash-relay";
         };
         flash-transistor = {
           type = "app";
-          program = "${self.packages.${pkgs.system}.flash-transistor}/bin/flash-transistor";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.flash-transistor}/bin/flash-transistor";
         };
       });
 
       devShells = forAll (pkgs: {
         default = pkgs.mkShell {
-          packages = [ pkgs.avrdude pkgs.picocom ];
+          packages = with self.packages.${pkgs.stdenv.hostPlatform.system}; [
+            flash-relay
+            flash-transistor
+            fizzel-poc
+            fizzel-final
+            pkgs.avrdude
+            pkgs.picocom
+            pkgs.d2
+          ];
         };
       });
 
@@ -138,8 +149,8 @@
         let
           # Firmware logic on the host: same .ino, fake Arduino, virtual clock.
           sim = name: flags: pkgs.runCommandCC "sim-${name}" { } ''
-            mkdir test firmware
-            cp ${./firmware/firmware.ino} firmware/firmware.ino
+            mkdir -p test firmware/poc
+            cp ${./firmware/poc/firmware.ino} firmware/poc/firmware.ino
             cp ${./test/sim.cpp} test/sim.cpp
             $CXX -std=c++17 -Wall -Werror -Wno-unused-function ${flags} test/sim.cpp -o sim
             ./sim | tee $out
@@ -155,7 +166,7 @@
           bench-lint = pkgs.runCommand "bench-lint"
             { nativeBuildInputs = [ pkgs.python3 ]; } ''
             export HOME=$PWD/home QT_QPA_PLATFORM=offscreen
-            cp ${self.packages.${pkgs.system}.bench-fzz}/* . && chmod u+w *
+            cp ${self.packages.${pkgs.stdenv.hostPlatform.system}.bench-fzz}/* . && chmod u+w *
             ${pkgs.fritzing}/bin/Fritzing -svg $PWD > /dev/null 2>&1
             for s in bench-relay bench-transistor; do
               python3 ${./fritzing}/lint.py $s.fzz ''${s}_breadboard.svg $s.nets.json
