@@ -43,11 +43,14 @@ command parser, button timings and the watchdog state machine.
 `test/vm.nix` boots the NixOS module in a VM and checks what reaches the
 COM port on `poweroff`, `reboot` and a stopped heartbeat.
 
-## Mistakes so far
+## Agent mistakes so far
 
-- Trusted a mental model of the relay board instead of its schematic:
-  wired header 37 (CH1) and 5 V/GND, got a signal on the pin and no relay.
-  The schematic shows header 37 reaches the optocoupler only through the
-  `CH1` jumper, and the opto side is fed from header 1 (3V3). Lesson: read
-  the vendor schematic before generating the sketch; they now live in
+The sketches, drawings and code are written by an AI agent; these are its
+errors, caught on the bench.
+
+- Wired the relay board without reading its schematic: missed the `CH1`
+  jumper and the 3V3 feed on header 1. Vendor schematics now live in
   `docs/schemas/`.
+- Guessed the relay board's channel and terminal order (actually CH3, CH2,
+  CH1 and NO, COM, NC) and drew it as fact. Unknowns are now measured on
+  the part first.

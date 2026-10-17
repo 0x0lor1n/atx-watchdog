@@ -169,8 +169,9 @@ def relay_board():
 
     Connector i (0..39) = header pin i + 1, Pi numbering: odd pins on the
     inner row, even pins on the board edge. Then 3 per channel, in the
-    Waveshare schematic's P1..P3 order: NC, COM, NO. The left-to-right order
-    of channels and terminals on the real board is not documented.
+    Waveshare schematic's P1..P3 order: NC, COM, NO. Physical order, header
+    edge up, checked on the board: channels CH3, CH2, CH1 left to right,
+    terminals NO, COM, NC left to right. Neither is in the vendor docs.
     """
     w, h = 65 * MM, 56.5 * MM
     p = GenPart(
@@ -212,7 +213,7 @@ def relay_board():
     a.append(f'<rect x="{jx:.2f}" y="{jy:.2f}" width="{6 * MM:.2f}" height="{8 * MM:.2f}" fill="#f2c400"/>')
     a.append(_text(jx + 3 * MM, jy + 4.6 * MM, "JMP", 4.5, "#000000"))
     for ch in range(3):
-        cx = (14.5 + ch * 18) * MM
+        cx = (14.5 + (2 - ch) * 18) * MM
         a.append(
             f'<rect x="{cx - 7.5 * MM:.2f}" y="{18 * MM:.2f}" width="{15 * MM:.2f}" '
             f'height="{18 * MM:.2f}" rx="2" fill="#151515"/>'
@@ -227,7 +228,7 @@ def relay_board():
             f'height="{9 * MM:.2f}" fill="#2f9e4f"/>'
         )
         for t, nm in enumerate(("NC", "COM", "NO")):
-            x = cx + (t - 1) * 5 * MM
+            x = cx + (1 - t) * 5 * MM
             a.append(f'<circle cx="{x:.2f}" cy="{46.5 * MM:.2f}" r="{1.7 * MM:.2f}" fill="#9aa4ad"/>')
             a.append(_text(x, 51 * MM, nm, 4.5, "#ffffff"))
             p.pin(f"CH{ch + 1} {nm}", x, 46.5 * MM, "R")
@@ -719,8 +720,8 @@ def bench_relay(parts):
         "Без гнезда 1 оптопара не питается, реле молчит.\n"
         "Relay_JMP: перемычка на CH1 (IN_CH1–P25)\n"
         "обязательна, без неё 37 ни к чему не подключено.\n"
-        "Порядок CH1–CH3 и NC/COM/NO на картинке\n"
-        "условный: сверь с надписями на плате.\n"
+        "Каналы слева направо CH3, CH2, CH1; винты\n"
+        "клеммника NO, COM, NC (COM посередине).\n"
         "Кнопку корпуса с JFP1 6/8 на время теста снять.\n"
         "JFP1/JCOM1: распиновка по мануалу MSI.",
     )
