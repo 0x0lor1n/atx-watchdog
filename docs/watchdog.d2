@@ -1,0 +1,23 @@
+direction: right
+style.fill: "#16161d"
+
+classes: {
+  state: {style: {fill: "#2a2a37"; stroke: "#7e9cd8"; font-color: "#dcd7ba"; stroke-width: 2; border-radius: 6; font-size: 22; bold: true}}
+  act: {style: {fill: "#2a2a37"; stroke: "#ff5d62"; font-color: "#dcd7ba"; stroke-width: 2; font-size: 20}}
+  host: {style: {stroke: "#e6c384"; stroke-width: 3; font-color: "#e6c384"; font-size: 20}}
+  fw: {style: {stroke: "#ff5d62"; stroke-width: 3; font-color: "#ff5d62"; font-size: 20}}
+  back: {style: {stroke: "#727169"; stroke-width: 3; font-color: "#727169"; font-size: 20}}
+}
+
+disarmed: "DISARMED\n(power-up, BIOS, boot)" {class: state}
+armed: "ARMED\ntimer = 0" {class: state}
+fire: "power-cycle\nhold 6 s, gap 3 s, press 0.3 s" {class: act}
+off: "POWEROFF: settle 3 s, hold 6 s\nREBOOT: settle 3 s, then power-cycle" {class: act}
+
+disarmed -> armed: "ALIVE" {class: host}
+armed -> armed: "ALIVE (timer = 0)" {class: host}
+armed -> fire: "300 s without ALIVE" {class: fw}
+fire -> disarmed: "one cycle only" {class: back}
+armed -> disarmed: "DISARM (heartbeat stopped cleanly)" {class: host}
+armed -> off: "POWEROFF / REBOOT" {class: host}
+off -> disarmed {class: back}

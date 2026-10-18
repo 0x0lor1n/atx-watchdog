@@ -142,6 +142,12 @@
                   resvg --skip-system-fonts --use-fonts-dir ${pkgs.source-sans}/share/fonts \
                     --font-family "Source Sans 3" wiring-$stage.svg $out/$stage/wiring.png
                 done
+
+                d2 ${./docs}/watchdog.d2 $out/watchdog.svg
+                sed -E 's/font-family: "?d2-[0-9]+-font-(bold|italic|regular)"?/font-family: "Source Sans 3"/' \
+                  $out/watchdog.svg > watchdog.svg
+                resvg --skip-system-fonts --use-fonts-dir ${pkgs.source-sans}/share/fonts \
+                  --font-family "Source Sans 3" watchdog.svg $out/watchdog.png
               '';
 
           render-docs = pkgs.writeShellApplication {
@@ -243,7 +249,7 @@
           # The tracked SVGs must be what their sources render to; PNGs are not
           # compared, resvg output is not byte-stable across versions.
           docs-fresh = pkgs.runCommand "docs-fresh" { } ''
-            for f in poc/schematic.svg poc/wiring.svg final/wiring.svg; do
+            for f in poc/schematic.svg poc/wiring.svg final/wiring.svg watchdog.svg; do
               cmp -s ${self.packages.${pkgs.stdenv.hostPlatform.system}.docs}/$f ${./docs}/$f \
                 || { echo "docs/$f is stale, run render-docs" >&2; exit 1; }
             done
