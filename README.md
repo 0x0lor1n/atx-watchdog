@@ -1,5 +1,9 @@
 # atx-watchdog
 
+> [!WARNING]
+> Every line in this repo is vibe-coded: firmware, NixOS module, generators,
+> docs. Read it before you trust it with your hardware.
+
 A hardware watchdog for an ATX PC, built on a SparkFun Pro Micro: if the OS
 stops saying it is alive, the firmware presses the power button for it.
 Personal project.
@@ -21,8 +25,10 @@ stays up while the PC is off. See
 
 The proof of concept on the bench, and in the case:
 
-![PoC breadboard with the relay board](docs/poc/bench-photo.jpg)
-![PoC inside the case](docs/poc/in-case.jpg)
+<table><tr>
+<td><img src="docs/poc/bench-photo.jpg" height="320" alt="PoC breadboard with the relay board"></td>
+<td><img src="docs/poc/in-case.jpg" height="320" alt="PoC inside the case"></td>
+</tr></table>
 
 ## Watchdog
 
