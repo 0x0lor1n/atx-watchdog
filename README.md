@@ -1,7 +1,7 @@
 # atx-watchdog
 
 > [!WARNING]
-> Every line in this repo is vibe-coded: firmware, NixOS module, generators,
+> Every line in this repo is ⚡electrovibe⚡-coded: firmware, NixOS module, generators,
 > docs. Read it before you trust it with your hardware.
 
 A hardware watchdog for an ATX PC, built on a SparkFun Pro Micro: if the OS
@@ -33,7 +33,7 @@ The proof of concept on the bench, and in the case:
 
 ## Watchdog
 
-![watchdog states](docs/watchdog.svg)
+![watchdog states](docs/watchdog.png)
 
 - **Arming.** The watchdog starts disarmed: power-up, BIOS and boot are
   never touched. The first `ALIVE` arms it, every `ALIVE` restarts the
