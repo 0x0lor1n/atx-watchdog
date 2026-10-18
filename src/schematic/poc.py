@@ -27,7 +27,7 @@ def terminal(drawing, label, loc):
 with schemdraw.Drawing(file=OUT, show=False) as d:
     d.config(unit=2.5, fontsize=10)
 
-    # ---- NAS COM1 header (only the two pins we use) ----
+    # ---- COM1 header (only the two pins we use) ----
     d.here = (0, 0)
     terminal(d, "JCOM1 pin 3\nSOUT  ±12 V", "left")
     d.here = (0, -5.0)
@@ -111,7 +111,7 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
         .at((0, -7.5))
         .label(
             "All grounds common: ATX pin 7 = JCOM1 pin 5 = Pro Micro GND = relay hdr 6.\n"
-            "+5 V = ATX 5VSB (24-pin plug, pin 9): stays up while the NAS is off; NAS USB does not.\n"
+            "+5 V = ATX 5VSB (24-pin plug, pin 9): stays up while the PC is off; its USB does not.\n"
             "Idle SOUT is -12 V -> Q1 off -> RX0 pulled high by R2. Measured levels: BENCH.md.",
             loc="right",
             halign="left",

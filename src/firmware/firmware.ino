@@ -1,4 +1,4 @@
-// Pro Micro as the NAS power button: commands arrive on Serial1 (JCOM1 via a
+// Pro Micro as the PC power button: commands arrive on Serial1 (JCOM1 via a
 // BC547 inverter, 9600 8N1) or USB; pin 4 drives the relay / BC547 on PWR SW.
 // Commands: POWEROFF REBOOT ALIVE DISARM PRESS HOLD PING STATUS.
 
@@ -24,7 +24,7 @@ const unsigned long PRESS_MS = 300;    // a normal short press
 const unsigned long WATCHDOG_MS =
     5UL * 60 * 1000; // module.nix asserts >= 2 beats fit
 
-// Disarmed after firing: a NAS that cannot boot gets one cycle, not a loop.
+// Disarmed after firing: a host that cannot boot gets one cycle, not a loop.
 static bool armed = false;
 static unsigned long last_alive;
 

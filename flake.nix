@@ -1,5 +1,5 @@
 {
-  description = "Pro Micro as the NAS power button, driven from the NAS COM port";
+  description = "Pro Micro as the PC power button, driven from the PC COM port";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -21,7 +21,7 @@
         ]);
     in
     {
-      # Import into the NAS config; see module.nix.
+      # Import into the host config; see module.nix.
       nixosModules.default = ./module.nix;
 
       packages = forAll (
@@ -31,7 +31,7 @@
           # Leonardo build: same MCU and Caterina loader as the Pro Micro 5 V.
           mkFirmware =
             name: extraFlags:
-            pkgs.runCommand "nas-power-button-${name}" { } ''
+            pkgs.runCommand "atx-watchdog-${name}" { } ''
               mkdir -p build sketch/firmware $out
               cp ${./src/firmware/firmware.ino} sketch/firmware/firmware.ino
               ${core}/arduino-builder \
@@ -112,11 +112,9 @@
           flash-relay = mkFlash "flash-relay" firmware-relay;
           flash-transistor = mkFlash "flash-transistor" firmware-transistor;
 
-          bench-fzz =
-            pkgs.runCommand "nas-power-button-bench-fzz" { nativeBuildInputs = [ pkgs.python3 ]; }
-              ''
-                python3 ${./src/fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
-              '';
+          bench-fzz = pkgs.runCommand "atx-watchdog-bench-fzz" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+            python3 ${./src/fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
+          '';
 
           # docs/<stage>/{schematic,wiring}.{svg,png} are tracked; `render-docs` in the
           # devshell copies this output over them. SVG for GitHub, PNG for chats and
@@ -124,7 +122,7 @@
           # its font as @font-face, which resvg ignores, so the PNG pass substitutes a
           # real font-family before rasterising.
           docs =
-            pkgs.runCommand "nas-power-button-docs"
+            pkgs.runCommand "atx-watchdog-docs"
               {
                 nativeBuildInputs = [
                   (python pkgs)
@@ -210,7 +208,7 @@
           shellHook = ''
             lefthook install >/dev/null || echo "lefthook install failed; git hooks not installed" >&2
             cat <<'HELP'
-            nas-power-button devshell
+            atx-watchdog devshell
               flash-relay [port]        PoC firmware, relay board   (pin 4 active LOW)
               flash-transistor [port]   final firmware, BC547       (pin 4 active HIGH)
               fizzel-poc                docs/poc/bench.fzz   in Fritzing

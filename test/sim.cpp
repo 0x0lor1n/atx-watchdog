@@ -47,7 +47,7 @@ struct FakeSerial {
 };
 static FakeSerial Serial, Serial1;
 
-// Bytes the NAS sends while the firmware is blocked in delay().
+// Bytes the host sends while the firmware is blocked in delay().
 struct Due {
   unsigned long t = 0;
   std::string s;
@@ -210,7 +210,7 @@ int main() {
     }
   });
 
-  // Bench 2026-10-18: the hold reached logind as a short press, the NAS shut
+  // Bench 2026-10-18: the hold reached logind as a short press, the host shut
   // itself down and its POWEROFF, queued during the hold, killed the reboot.
   test("POWEROFF sent during a watchdog hold is dropped", [] {
     boot();
@@ -226,7 +226,7 @@ int main() {
           std::string::npos);
   });
 
-  test("watchdog re-arms after the NAS boots and sends ALIVE again", [] {
+  test("watchdog re-arms after the host boots and sends ALIVE again", [] {
     boot();
     Serial1.send("ALIVE\n");
     run_for(WATCHDOG_MS + 20000);
@@ -244,7 +244,7 @@ int main() {
     CHECK(presses().empty());
   });
 
-  test("POWEROFF disarms: a powered-off NAS is not switched back on", [] {
+  test("POWEROFF disarms: a powered-off host is not switched back on", [] {
     boot();
     Serial1.send("ALIVE\n");
     run_for(60000);

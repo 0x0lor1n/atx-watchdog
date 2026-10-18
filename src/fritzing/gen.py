@@ -27,12 +27,12 @@ BB_ID = "0152b316-ca6e-11ee-a6fa-8be78db221f8BreadboardModuleID"  # Half_breadbo
 NPN_ID = "2244EBEC10e"  # transistor_signal_NPN_TO92_CBE: C B E left to right, like BC547
 RES_ID = "ResistorModuleID"
 DIODE_ID = "SparkFun-DiscreteSemi-DIODE-1N4148_v2"
-PM_ID = "nas-power-button-sfe-pro-micro-5v"
-RELAY_ID = "nas-power-button-waveshare-rpi-relay-board"
-JFP1_ID = "nas-power-button-msi-jfp1"
-JCOM1_ID = "nas-power-button-msi-jcom1"
-ATX_ID = "nas-power-button-atx24"
-BUTTON_ID = "nas-power-button-case-button"
+PM_ID = "atx-watchdog-sfe-pro-micro-5v"
+RELAY_ID = "atx-watchdog-waveshare-rpi-relay-board"
+JFP1_ID = "atx-watchdog-msi-jfp1"
+JCOM1_ID = "atx-watchdog-msi-jcom1"
+ATX_ID = "atx-watchdog-atx24"
+BUTTON_ID = "atx-watchdog-case-button"
 
 RED, BLACK, YELLOW, GREEN, ORANGE, BLUE = (
     "#cc1414",
@@ -141,9 +141,9 @@ class GenPart:
  <version>1</version>
  <title>{html.escape(self.title)}</title>
  <label>{self.label}</label>
- <author>nas-power-button/src/fritzing/gen.py</author>
+ <author>atx-watchdog/src/fritzing/gen.py</author>
  <description>{html.escape(self.desc)}</description>
- <tags><tag>nas-power-button</tag></tags>
+ <tags><tag>atx-watchdog</tag></tags>
  <properties><property name="family">{html.escape(self.family)}</property></properties>
  <views>
   <iconView><layers image="breadboard/{m}_breadboard.svg"><layer layerId="icon"/></layers></iconView>
@@ -716,7 +716,7 @@ def common(sk, jfp_at):
     jc = sk.embed(
         JCOM1_ID,
         "JCOM1",
-        msi_header(JCOM1_ID, "JCOM1", MSI_JCOM1, "MSI serial header (NAS)", True).files(),
+        msi_header(JCOM1_ID, "JCOM1", MSI_JCOM1, "MSI serial header", True).files(),
     )
     jc.place("connector0", (130, 235))
     sk.wire("pin17C", (jc, "connector2"), ORANGE, "JCOM1 3 SOUT to R1")
@@ -725,7 +725,7 @@ def common(sk, jfp_at):
     jf = sk.embed(
         JFP1_ID,
         "JFP1",
-        msi_header(JFP1_ID, "JFP1", MSI_JFP1, "MSI front panel header (NAS)", False).files(),
+        msi_header(JFP1_ID, "JFP1", MSI_JFP1, "MSI front panel header", False).files(),
     )
     jf.place("connector1", jfp_at)
 

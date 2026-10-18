@@ -1,6 +1,6 @@
-# nas-power-button
+# atx-watchdog
 
-A hardware watchdog and remote power button for a home NAS, built on a
+A hardware watchdog and remote power button for an ATX PC, built on a
 SparkFun Pro Micro. Personal project.
 
 **Why.** A short on the PSU killed the USB controller of the motherboard and broke the
@@ -26,7 +26,7 @@ Nix with flakes enabled, direnv (`use flake` in `.envrc`). `nix develop`
 prints the available commands and installs the git hooks (lefthook.yml):
 linters and formatters on commit, `nix flake check` on push.
 
-NAS side: import `nixosModules.default`, see `module.nix`.
+Host side: import `nixosModules.default`, see `module.nix`.
 
 ## Two ideas worth stealing
 
