@@ -114,6 +114,17 @@ of use:
 - [ ] 5VSB for good: today a Dupont pin sits in the back of the 24-pin
       plug. Replace it with a 24-pin extension tap or a soldered lead.
 - [ ] Final schematic in KiCad.
+- [ ] **Known bug, fix in the next revision: the firmware presses blind.**
+      `POWEROFF`, `REBOOT` and the watchdog hold PWR SW without knowing
+      whether the board is on. If the board is already off when the hold
+      starts (it powered off by itself, or the user pressed the case button
+      to turn it on during the 3 s settle or the hold), the hold switches it
+      on and the PCH forces it off 4 s later: "spins up, dies after ~5 s".
+      Seen in the case: case button pressed on a running PC, then pressed
+      again to power on. Fix: read PWR_OK (ATX pin 8) on a spare pin;
+      skip the hold when the board is off, release as soon as PWR_OK
+      drops, short press only on a board that is off; sim tests for both
+      races.
 
 ## Agent mistakes so far
 
