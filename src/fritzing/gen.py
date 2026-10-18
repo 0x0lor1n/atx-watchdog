@@ -6,7 +6,8 @@ Placement is "this pin goes into that hole": hole and pin coordinates come
 from the parts' own SVGs (svgpins.py), and every plug is checked to land on
 its hole. The nets are then traced through the breadboard strips and compared
 with the schematic, so a misplaced wire fails the build instead of the bench.
-Parts Fritzing does not ship (Waveshare RPi Relay Board, MSI JFP1/JCOM1) are
+Parts Fritzing does not ship (Waveshare RPi Relay Board, MSI JFP1/JCOM1, the
+ATX plug, the case button) are
 generated here and embedded in the .fzz.
 """
 
@@ -30,6 +31,8 @@ PM_ID = "nas-power-button-sfe-pro-micro-5v"
 RELAY_ID = "nas-power-button-waveshare-rpi-relay-board"
 JFP1_ID = "nas-power-button-msi-jfp1"
 JCOM1_ID = "nas-power-button-msi-jcom1"
+ATX_ID = "nas-power-button-atx24"
+BUTTON_ID = "nas-power-button-case-button"
 
 RED, BLACK, YELLOW, GREEN, ORANGE, BLUE = (
     "#cc1414",
@@ -282,6 +285,71 @@ def msi_header(module_id, title, names, desc, odd_on_top):
         else:
             p.pin(f"{n} {names[n]}", x, y, "L" if n % 2 else "R")
     a.append(_text(w / 2, h - 3, title, 6.5, "#ffffff", weight="bold"))
+    return p
+
+
+ATX24 = {
+    1: "3.3V",
+    2: "3.3V",
+    3: "GND",
+    4: "5V",
+    5: "GND",
+    6: "5V",
+    7: "GND",
+    8: "PWR_OK",
+    9: "5VSB",
+    10: "12V",
+    11: "12V",
+    12: "3.3V",
+    13: "3.3V",
+    14: "-12V",
+    15: "GND",
+    16: "PS_ON",
+    17: "GND",
+    18: "GND",
+    19: "GND",
+    20: "NC",
+    21: "5V",
+    22: "5V",
+    23: "5V",
+    24: "GND",
+}
+
+
+def atx24():
+    """PSU 24-pin plug, mating face, latch up: 13..24 on top, 1..12 below.
+
+    Pin 9 is found by continuity, not colour (sleeved cables): 3.3 V sits in
+    three corners (1, 12, 13), the odd corner is 24 (GND), and 3, 5, 7 are the
+    only grounds in the lower row. Connector i = pin i + 1.
+    """
+    w, h = 11 * P + 30, 50.0
+    p = GenPart(ATX_ID, "ATX 24-pin", "ATX", "power connector", "PSU 24-pin plug, mating face", w, h, "female")
+    a = p.art
+    x0, y_top, y_bot = 15.0, 20.0, 20.0 + P
+    a.append(f'<rect x="0" y="6" width="{w}" height="{h - 6}" rx="2" fill="#e8e4d8" stroke="#8a8578"/>')
+    a.append(f'<rect x="{w / 2 - 10}" y="0" width="20" height="7" fill="#e8e4d8" stroke="#8a8578"/>')
+    a.append(_text(w / 2, 5.5, "latch", 4, "#555555"))
+    for n in range(1, 25):
+        x = x0 + ((n - 13) if n > 12 else (n - 1)) * P
+        y = y_top if n > 12 else y_bot
+        hot = n in (7, 9)
+        a.append(_text(x, y - 5.5 if n > 12 else y + 9.5, str(n), 4.5, "#c00000" if hot else "#333333"))
+        p.pin(f"{n} {ATX24[n]}", x, y, "L" if n <= 12 else "R")
+    a.append(_text(w / 2, h - 3, "ATX 24-pin (PSU plug)", 5.5, "#000000", weight="bold"))
+    return p
+
+
+def case_button():
+    """The case's power button lead: a 2-pin housing, no polarity."""
+    w, h = P + 30, 40.0
+    p = GenPart(BUTTON_ID, "Case PWR SW", "SW", "switch", "Case power button (front panel lead)", w, h, "female")
+    a = p.art
+    a.append(f'<rect x="10" y="4" width="{P + 10}" height="12" fill="#111111"/>')
+    a.append(f'<circle cx="{w / 2}" cy="28" r="7" fill="#9aa4ad" stroke="#333333"/>')
+    a.append(_text(w / 2, h - 1, "case PWR SW", 4.5, "#000000"))
+    p.pin("1", 15.0, 10.0, "L")
+    p.pin("2", 15.0 + P, 10.0, "R")
     return p
 
 
@@ -661,13 +729,19 @@ def common(sk, jfp_at):
     )
     jf.place("connector1", jfp_at)
 
-    for k, part in enumerate((pm, q1, r1, d1, r2, jc, jf)):
+    # 5VSB: a Dupont pushed into the back of the PSU plug next to pin 9's wire.
+    # Ground needs no second wire, it is common through JCOM1 5.
+    atx = sk.embed(ATX_ID, "ATX 24-pin", atx24().files())
+    atx.place("connector0", (130, 320))
+    sk.wire("pin13W", (atx, "connector8"), RED, "ATX 9 5VSB to +")
+
+    for k, part in enumerate((pm, q1, r1, d1, r2, jc, jf, atx)):
         part.sch = (k % 4 * 200, k // 4 * 200)
         part.pcb = (k % 4 * 120, k // 4 * 120)
 
     pmn = lambda pin: ("Pro Micro", pm_conn(pin))
     nets = {
-        "+5V": [pmn("VCC"), ("R2 10k", "connector1")],
+        "+5V": [pmn("VCC"), ("R2 10k", "connector1"), ("ATX 24-pin", "connector8")],
         "GND": [
             pmn("GND"),
             ("Q1 BC547", "connector0"),
@@ -701,20 +775,27 @@ def bench_relay(parts):
     sk.wire("pin8C", hdr(37), GREEN, "Pro Micro 4 to relay CH1")
     sk.wire(term(1, "COM"), (jf, "connector5"), BLUE, "CH1 COM to JFP1 6")
     sk.wire(term(1, "NO"), (jf, "connector7"), BLUE, "CH1 NO to JFP1 8")
+    btn = sk.embed(BUTTON_ID, "Case PWR SW", case_button().files())
+    btn.place("connector0", (520, 330))
+    btn.sch, btn.pcb = (800, 200), (480, 120)
+    # No polarity; left pin to NO (left screw) so the wires do not cross.
+    sk.wire(term(1, "NO"), (btn, "connector0"), GREEN, "case button to CH1 NO")
+    sk.wire(term(1, "COM"), (btn, "connector1"), GREEN, "case button to CH1 COM")
     title = lambda c: ("Relay board", c[1])
     nets["+5V"] += [title(hdr(2)), title(hdr(1))]
     nets["GND"].append(title(hdr(6)))
     nets["D4"] = [("Pro Micro", pm_conn("4")), title(hdr(37))]
-    nets["PWR SW 6"].append(title(term(1, "COM")))
-    nets["PWR SW 8"] = [("JFP1", "connector7"), title(term(1, "NO"))]
+    nets["PWR SW 6"] += [title(term(1, "COM")), ("Case PWR SW", "connector1")]
+    nets["PWR SW 8"] = [("JFP1", "connector7"), title(term(1, "NO")), ("Case PWR SW", "connector0")]
     sk.check(nets)
     sk.note(
         600,
         0,
         400,
-        240,
+        260,
         "Этап A (BENCH.md A1–A3), прошивка flash-relay.\n"
-        "Pro Micro питается по USB от ноутбука.\n"
+        "Питание: 5VSB, ATX pin 9 (Dupont сзади штекера).\n"
+        "USB только для прошивки, не вместе с 5VSB.\n"
         "Реле-плата: гнёзда 1 (3V3) и 2 (5V) на «+»,\n"
         "6 (GND) на «−», 37 (CH1) на Pro Micro 4.\n"
         "Без гнезда 1 оптопара не питается, реле молчит.\n"
@@ -722,7 +803,7 @@ def bench_relay(parts):
         "обязательна, без неё 37 ни к чему не подключено.\n"
         "Каналы слева направо CH3, CH2, CH1; винты\n"
         "клеммника NO, COM, NC (COM посередине).\n"
-        "Кнопку корпуса с JFP1 6/8 на время теста снять.\n"
+        "Кнопка корпуса — в те же COM и NO, параллельно.\n"
         "JFP1/JCOM1: распиновка по мануалу MSI.",
     )
     return sk

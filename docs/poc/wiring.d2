@@ -54,14 +54,19 @@ pm: "Pro Micro 5 V / 16 MHz" {
   usb: "USB: flashing / debug only" {class: pin}
 }
 
+case: "NAS case" {
+  class: board
+  sw: "front panel PWR SW (2-pin lead)" {class: part}
+}
+
 rel: "Waveshare RPi Relay Board" {
   class: board
   v33: "header 1  3V3 (opto side; 5 V ok)" {class: pin}
   v5: "header 2  5V (coils)" {class: pin}
   g: "header 6  GND" {class: pin}
   ch1: "header 37  CH1 IN  (jumper CH1 on!)" {class: pin}
-  com: "CH1 COM" {class: pin}
-  no: "CH1 NO" {class: pin}
+  com: "CH1 COM (middle screw)" {class: pin}
+  no: "CH1 NO (left screw)" {class: pin}
 }
 
 mb.com.p3 -> lvl.r1: "SOUT" {class: data}
@@ -76,8 +81,10 @@ mb.atx.p7 -> rel.g: "GND" {class: gnd}
 pm.p4 -> rel.ch1: "LOW = closed" {class: ctl}
 mb.jfp.p6 <- rel.com: "parallel to case button" {class: btn}
 mb.jfp.p8 <- rel.no {class: btn}
+case.sw -> rel.com: "same screws, parallel" {class: btn}
+case.sw -> rel.no {class: btn}
 
-note: "all GNDs are one common ground (ATX pin 7 = JCOM1 pin 5)\non the bench: VCC and 5 V from USB instead of 5VSB, never both\nfinal build swaps the relay board for a BC547: docs/final" {
+note: "all GNDs are one common ground (ATX pin 7 = JCOM1 pin 5)\n5VSB: Dupont pushed into the back of the PSU plug, pin 9; USB only to flash, never with 5VSB\nfinal build swaps the relay board for a BC547: docs/final" {
   near: bottom-center
   shape: text
   style: {font-color: "#e6c384"; font-size: 24; italic: true}

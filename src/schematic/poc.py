@@ -71,7 +71,7 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     d += elm.Vdd().label("+5 V", loc="top")
     d += elm.Line().at(pm.GND).down(0.6)
     d += elm.Ground()
-    d += elm.Label().at((pm.GND[0], pm.GND[1] - 1.9)).label("micro-USB -> NAS internal USB header", fontsize=9)
+    d += elm.Label().at((pm.GND[0], pm.GND[1] - 1.9)).label("USB: flashing only, never with 5VSB", fontsize=9)
 
     # ---- Waveshare relay board ----
     d += elm.Line().at(pm.D4).right(2.0)
@@ -111,7 +111,7 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
         .at((0, -7.5))
         .label(
             "All grounds common: ATX pin 7 = JCOM1 pin 5 = Pro Micro GND = relay hdr 6.\n"
-            "+5 V = ATX 5VSB (pin 9) through LM2596; on the bench it is USB 5 V.\n"
+            "+5 V = ATX 5VSB (24-pin plug, pin 9): stays up while the NAS is off; NAS USB does not.\n"
             "Idle SOUT is -12 V -> Q1 off -> RX0 pulled high by R2. Measured levels: BENCH.md.",
             loc="right",
             halign="left",
