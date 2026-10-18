@@ -37,10 +37,28 @@ static void say(const char *msg) {
     Serial.println(msg);
 }
 
+static Line com = {"com: "}, usb = {"usb: "};
+
+// Input that arrived while the button was down is stale: a hold looks like a
+// short press to a live OS, whose own POWEROFF must not fire after we reboot
+// it.
+static void discard_input() {
+  bool any = com.len || usb.len;
+  while (Serial1.available())
+    Serial1.read(), any = true;
+  while (Serial.available())
+    Serial.read(), any = true;
+  com.len = usb.len = 0;
+  com.overlong = usb.overlong = false;
+  if (any)
+    say("(input during press, dropped)");
+}
+
 static void press(unsigned long ms) {
   button(true);
   delay(ms);
   button(false);
+  discard_input();
 }
 
 static void power_cycle() {
@@ -110,8 +128,6 @@ static void feed(Line &l, int c) {
     l.overlong = true;
   }
 }
-
-static Line com = {"com: "}, usb = {"usb: "};
 
 void setup() {
   button(false); // idle level before pinMode, or the relay clicks on boot

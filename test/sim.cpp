@@ -19,7 +19,7 @@ struct Edge {
 static std::vector<Edge> edges;
 
 unsigned long millis() { return now_ms; }
-void delay(unsigned long ms) { now_ms += ms; }
+void delay(unsigned long ms);
 void pinMode(uint8_t, uint8_t) {}
 void digitalWrite(uint8_t, uint8_t v) {
   if (v != pin_level)
@@ -46,6 +46,22 @@ struct FakeSerial {
   void send(const std::string &s) { in.insert(in.end(), s.begin(), s.end()); }
 };
 static FakeSerial Serial, Serial1;
+
+// Bytes the NAS sends while the firmware is blocked in delay().
+struct Due {
+  unsigned long t = 0;
+  std::string s;
+};
+static std::vector<Due> due;
+void delay(unsigned long ms) {
+  unsigned long end = now_ms + ms;
+  for (auto &d : due)
+    if (!d.s.empty() && d.t <= end) {
+      Serial1.send(d.s);
+      d.s.clear();
+    }
+  now_ms = end;
+}
 
 #include "../src/firmware/firmware.ino"
 
@@ -81,6 +97,7 @@ static void boot(unsigned long start = 0) {
   edges.clear();
   Serial = FakeSerial();
   Serial1 = FakeSerial();
+  due.clear();
   armed = false;
   com.len = usb.len = 0;
   com.overlong = usb.overlong = false;
@@ -191,6 +208,22 @@ int main() {
       CHECK(p[0].at - alive_at >= WATCHDOG_MS);
       CHECK(p[0].at - alive_at < WATCHDOG_MS + 200);
     }
+  });
+
+  // Bench 2026-10-18: the hold reached logind as a short press, the NAS shut
+  // itself down and its POWEROFF, queued during the hold, killed the reboot.
+  test("POWEROFF sent during a watchdog hold is dropped", [] {
+    boot();
+    Serial1.send("ALIVE\n");
+    run_for(100);
+    due.push_back({now_ms + WATCHDOG_MS + 500, "\nDISARM\n\nPOWEROFF\n"});
+    run_for(WATCHDOG_MS + 60000);
+    auto p = presses();
+    CHECK(p.size() == 2);
+    if (p.size() == 2)
+      CHECK(p[0].len == HOLD_MS && p[1].len == PRESS_MS);
+    CHECK(Serial.out.find("(input during press, dropped)") !=
+          std::string::npos);
   });
 
   test("watchdog re-arms after the NAS boots and sends ALIVE again", [] {
