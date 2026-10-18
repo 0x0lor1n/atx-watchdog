@@ -703,7 +703,7 @@ def common(sk, jfp_at):
 
     q1 = bc547(sk, "Q1 BC547", "pin20E")
     r1 = resistor(sk, "R1 10k", "10kΩ", "pin17D", "pin21D")
-    d1 = sk.core(DIODE_ID, "sparkfun-discretesemi-diode-1n4148_v2.fzp", "D1 1N4148")
+    d1 = sk.core(DIODE_ID, "sparkfun-discretesemi-diode-1n4148_v2.fzp", "D1 1N4148/1N4007")
     d1.place("connector1", sk.hole("pin21C"))  # cathode (band) on the base column
     sk.plug(d1, "connector1", "pin21C")
     sk.plug(d1, "connector0", "pin25C")
@@ -745,13 +745,13 @@ def common(sk, jfp_at):
         "GND": [
             pmn("GND"),
             ("Q1 BC547", "connector0"),
-            ("D1 1N4148", "connector0"),
+            ("D1 1N4148/1N4007", "connector0"),
             ("JCOM1", "connector4"),
         ],
         "SOUT": [("JCOM1", "connector2"), ("R1 10k", "connector0")],
         "Q1 base": [
             ("R1 10k", "connector1"),
-            ("D1 1N4148", "connector1"),
+            ("D1 1N4148/1N4007", "connector1"),
             ("Q1 BC547", "connector1"),
         ],
         "RX": [("Q1 BC547", "connector2"), ("R2 10k", "connector0"), pmn("RX")],

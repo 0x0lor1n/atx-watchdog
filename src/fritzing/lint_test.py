@@ -52,7 +52,7 @@ CASES = [
     (
         "bench-relay",
         "D1 across the centre gap",
-        lambda fz: shift_instance(fz, "D1 1N4148", 0, -4 * P),
+        lambda fz: shift_instance(fz, "D1 1N4148/1N4007", 0, -4 * P),
     ),
     ("bench-relay", "Pro Micro one column right", lambda fz: shift_instance(fz, "Pro Micro", P, 0)),
     (

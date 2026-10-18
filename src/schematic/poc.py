@@ -42,7 +42,7 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     # D1 is offset left so its label clears Q1's emitter lead.
     d += elm.Line().at(base).down(1.2)
     d += elm.Line().left(1.2)
-    d += elm.Diode().down(1.4).reverse().label("D1 1N4148", loc="right", ofst=0.4)
+    d += elm.Diode().down(1.4).reverse().label("D1 1N4148/1N4007", loc="right", ofst=0.4)
     d += elm.Ground()
     q1 = elm.BjtNpn(circle=True).right().anchor("base").at(base)
     d += q1.label("Q1 BC547", loc="right", ofst=0.5)
