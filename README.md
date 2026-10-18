@@ -6,7 +6,8 @@
 
 A hardware watchdog for an ATX PC, built on a SparkFun Pro Micro: if the OS
 stops saying it is alive, the firmware presses the power button for it.
-Personal project.
+Personal project, unfinished: the proof of concept is built and being
+tested in the PC; the final build is not started yet.
 
 **Why.** A short on the PSU killed the USB controller of the motherboard and broke the
 handling of the power-off signal: the OS halts, the board stays on, and the
