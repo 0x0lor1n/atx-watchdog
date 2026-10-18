@@ -11,10 +11,11 @@
         "aarch64-linux"
       ];
       forAll = f: nixpkgs.lib.genAttrs systems (s: f nixpkgs.legacyPackages.${s});
-      # One interpreter for gen.py/lint.py/poc.py, the devshell and the checks.
+      # One interpreter for gen.py/poc.py, the devshell and the checks.
       python =
         pkgs:
         pkgs.python3.withPackages (p: [
+          (p.callPackage ./src/fzgen { })
           p.schemdraw
           p.ziamath # schemdraw text="path"
           p.latex2mathml # ziamath imports it unconditionally
@@ -112,7 +113,9 @@
           flash-relay = mkFlash "flash-relay" firmware-relay;
           flash-transistor = mkFlash "flash-transistor" firmware-transistor;
 
-          bench-fzz = pkgs.runCommand "atx-watchdog-bench-fzz" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+          fzgen = pkgs.python3Packages.callPackage ./src/fzgen { };
+
+          bench-fzz = pkgs.runCommand "atx-watchdog-bench-fzz" { nativeBuildInputs = [ (python pkgs) ]; } ''
             python3 ${./src/fritzing}/gen.py ${pkgs.fritzing}/share/fritzing/parts $out
           '';
 
@@ -257,14 +260,14 @@
           '';
           vm = pkgs.testers.runNixOSTest (import ./test/vm.nix self);
           # Lints what Fritzing saved, not what gen.py placed: the two differ after a GUI edit.
-          bench-lint = pkgs.runCommand "bench-lint" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+          bench-lint = pkgs.runCommand "bench-lint" { nativeBuildInputs = [ (python pkgs) ]; } ''
             export HOME=$PWD/home QT_QPA_PLATFORM=offscreen
             cp ${self.packages.${pkgs.stdenv.hostPlatform.system}.bench-fzz}/* . && chmod u+w *
             ${pkgs.fritzing}/bin/Fritzing -svg $PWD > /dev/null 2>&1
             for s in bench-relay bench-transistor; do
-              python3 ${./src/fritzing}/lint.py $s.fzz ''${s}_breadboard.svg $s.nets.json
+              fzgen-lint $s.fzz ''${s}_breadboard.svg $s.nets.json
             done
-            python3 ${./src/fritzing}/lint_test.py ${pkgs.fritzing}/bin/Fritzing $PWD | tee $out
+            python3 ${./src/fritzing}/lint_cases.py ${pkgs.fritzing}/bin/Fritzing $PWD | tee $out
           '';
         }
       );

@@ -1,12 +1,12 @@
 """Lint a bench sketch against its schematic, using only what Fritzing drew.
 
-  python3 lint.py <sketch.fzz> <sketch_breadboard.svg> <sketch.nets.json>
+  fzgen-lint <sketch.fzz> <sketch_breadboard.svg> <sketch.nets.json>
 
 The SVG is Fritzing's own export (Fritzing -svg). Fritzing trusts the
 <connects> saved in a .fzz and does not re-derive them from geometry, so
 this reads geometry only: which pin or leg end sits in which hole, where each
 wire ends. From that it builds the nets through the breadboard strips and
-compares them with the expected nets that gen.py wrote. Exit 1 on any finding.
+compares them with the expected nets that Sketch.save wrote. Exit 1 on any finding.
 """
 
 import json
@@ -14,7 +14,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
-import svgpins as sp
+from . import svgpins as sp
 
 TOL = 0.03 * sp.SCENE_DPI  # a pin is "in" a hole within 0.03 in
 SVG = "{http://www.w3.org/2000/svg}"
@@ -204,7 +204,7 @@ def main(fzz, svg, nets_json):
     return 1 if findings else 0
 
 
-if __name__ == "__main__":
+def cli():
     if len(sys.argv) != 4:
         sys.exit(__doc__)
     sys.exit(main(*sys.argv[1:]))

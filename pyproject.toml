@@ -8,3 +8,6 @@ select = ["E", "F", "W", "B", "I", "UP", "SIM", "RUF"]
 # lines left are Fritzing part ids and literal notes. RUF001: those notes are
 # Russian and use typographic dashes on purpose.
 ignore = ["E731", "E501", "RUF001"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fzgen"]

@@ -1,19 +1,17 @@
-"""Mutation test for lint.py: break a sketch's geometry, re-export it with
-Fritzing, and require lint.py to fail. <connects> are left as they were, so
+"""Mutation test for lint: break a sketch's geometry, re-export it with
+Fritzing, and require lint to fail. <connects> are left as they were, so
 the saved connections still claim everything is fine; only the drawing moves.
-
-  python3 lint_test.py <Fritzing binary> <dir with gen.py output>
 """
 
+import contextlib
+import io
 import os
 import re
 import shutil
 import subprocess
-import sys
 import zipfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-P = 9.0
+from . import lint
 
 
 def shift_instance(fz, title, dx, dy):
@@ -32,47 +30,12 @@ def move_wire_end(fz, title, dx, dy):
     return fz[: m.start()] + new + fz[m.end() :]
 
 
-# (sketch, name, mutation). Every one is a real bench mistake.
-CASES = [
-    (
-        "bench-relay",
-        "Q1 one column right (C B E shifted)",
-        lambda fz: shift_instance(fz, "Q1 BC547", P, 0),
-    ),
-    (
-        "bench-relay",
-        "RX wire lands one hole off (TX instead of RX)",
-        lambda fz: move_wire_end(fz, "Q1 C to Pro Micro RX", -P, 0),
-    ),
-    (
-        "bench-relay",
-        "relay CH1 wire on header pin 35 instead of 37",
-        lambda fz: move_wire_end(fz, "Pro Micro 4 to relay CH1", -P, 0),
-    ),
-    (
-        "bench-relay",
-        "D1 across the centre gap",
-        lambda fz: shift_instance(fz, "D1 1N4148/1N4007", 0, -4 * P),
-    ),
-    ("bench-relay", "Pro Micro one column right", lambda fz: shift_instance(fz, "Pro Micro", P, 0)),
-    (
-        "bench-transistor",
-        "R4 half a row down (both legs off their holes)",
-        lambda fz: shift_instance(fz, "R4 10k", 0, P / 2),
-    ),
-    (
-        "bench-transistor",
-        "Q2 emitter wire into the + rail",
-        lambda fz: move_wire_end(fz, "Q2 E to -", 0, P),
-    ),
-]
-
-
-def main(fritzing, src):
+def run(fritzing, src, cases):
+    """cases: [(sketch, description, mutate(fz) -> fz)]; src holds Sketch.save output."""
     work = os.path.join(os.environ.get("TMPDIR", "/tmp"), "lint-mutations")
     shutil.rmtree(work, ignore_errors=True)
     failures = 0
-    for k, (sketch, name, mutate) in enumerate(CASES):
+    for k, (sketch, name, mutate) in enumerate(cases):
         d = os.path.join(work, str(k))
         os.makedirs(d)
         zi = zipfile.ZipFile(os.path.join(src, sketch + ".fzz"))
@@ -93,25 +56,15 @@ def main(fritzing, src):
             timeout=120,
             check=True,
         )
-        r = subprocess.run(
-            [
-                sys.executable,
-                os.path.join(HERE, "lint.py"),
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = lint.main(
                 os.path.join(d, sketch + ".fzz"),
                 os.path.join(d, sketch + "_breadboard.svg"),
                 os.path.join(src, sketch + ".nets.json"),
-            ],
-            capture_output=True,
-            text=True,
-        )
-        caught = r.returncode == 1
-        first = (r.stdout.strip().splitlines() or ["(no output)"])[0].split(": ", 1)[-1]
+            )
+        caught = rc == 1
+        first = (out.getvalue().strip().splitlines() or ["(no output)"])[0].split(": ", 1)[-1]
         print(f"{'caught' if caught else 'MISSED'}: {name} -> {first}")
         failures += not caught
     return 1 if failures else 0
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        sys.exit(__doc__)
-    sys.exit(main(*sys.argv[1:]))
