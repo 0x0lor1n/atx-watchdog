@@ -14,11 +14,15 @@ a microcontroller listens on the COM port and presses the button.
 the Pro Micro's `Serial1`; pin 4 shorts PWR SW (relay board in the proof of
 concept, a BC547 in the final build). The Pro Micro runs from 5VSB, so it
 stays up while the PC is off. See
-[docs/poc/schematic.svg](docs/poc/schematic.svg) (schemdraw),
-[docs/poc/wiring.svg](docs/poc/wiring.svg) and
-[docs/final/wiring.svg](docs/final/wiring.svg) (d2, bench wiring),
-[docs/BENCH.md](docs/BENCH.md). Each drawing also has a `.png` next to it
-for chats and phones.
+[docs/poc/schematic.png](docs/poc/schematic.png) (schemdraw),
+[docs/poc/wiring.png](docs/poc/wiring.png) and
+[docs/final/wiring.png](docs/final/wiring.png) (d2, bench wiring),
+[docs/BENCH.md](docs/BENCH.md). Each drawing also has an `.svg` next to it.
+
+The proof of concept on the bench, and in the case:
+
+![PoC breadboard with the relay board](docs/poc/bench-photo.jpg)
+![PoC inside the case](docs/poc/in-case.jpg)
 
 ## Watchdog
 
