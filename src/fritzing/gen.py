@@ -2,7 +2,7 @@
 
   python3 gen.py <fritzing-parts-dir> <out-dir>
 
-Placement, net checks and the .fzz writer are in fzgen. Parts Fritzing does
+Placement, net checks and the .fzz writer are in mcubench.fritzing. Parts Fritzing does
 not ship (Waveshare RPi Relay Board, MSI JFP1/JCOM1, the ATX plug, the case
 button) are generated here and embedded in the .fzz.
 """
@@ -11,11 +11,11 @@ import functools
 import os
 import sys
 
-from fzgen import part as fzpart
-from fzgen import promicro
-from fzgen.part import MM, P, text
-from fzgen.place import RES_ID, npn_to92, resistor, span
-from fzgen.sketch import BLACK, BLUE, GREEN, ORANGE, RED, YELLOW, Sketch
+from mcubench.fritzing import part as fzpart
+from mcubench.fritzing import promicro
+from mcubench.fritzing.part import MM, P, text
+from mcubench.fritzing.place import RES_ID, npn_to92, resistor, span
+from mcubench.fritzing.sketch import BLACK, BLUE, GREEN, ORANGE, RED, YELLOW, Sketch
 
 DIODE_ID = "SparkFun-DiscreteSemi-DIODE-1N4148_v2"
 PM_ID = "atx-watchdog-sfe-pro-micro-5v"

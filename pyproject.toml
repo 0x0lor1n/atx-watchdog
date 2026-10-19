@@ -10,4 +10,4 @@ select = ["E", "F", "W", "B", "I", "UP", "SIM", "RUF"]
 ignore = ["E731", "E501", "RUF001"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fzgen"]
+known-first-party = ["mcubench"]

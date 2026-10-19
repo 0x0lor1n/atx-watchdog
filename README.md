@@ -94,7 +94,7 @@ see `module.nix` for the options.
 **Generated, linted breadboards.** `src/fritzing/gen.py` places parts by
 "this pin goes into that hole", using hole and pin coordinates from the
 parts' own SVGs, and traces the resulting nets through the breadboard
-strips against the schematic. Then `fzgen-lint` (`src/fzgen`) re-reads what
+strips against the schematic. Then `fritzing-lint` ([mcu-bench](https://github.com/0x0lor1n/mcu-bench)) re-reads what
 Fritzing actually rendered, so a pin that drifted off its hole or a wire on
 the wrong row fails `nix flake check` instead of the bench.
 

@@ -11,18 +11,10 @@ import sys
 import schemdraw
 import schemdraw.elements as elm
 
-schemdraw.use("svg")
-# Text as <path>: the viewer's font no longer decides whether a pin label
-# lands on the box edge.
-schemdraw.svgconfig.text = "path"
+from mcubench.schematic import IC, promicro, setup, terminal
 
+setup()
 OUT = sys.argv[1]
-IC = {"edgepadW": 0.8, "edgepadH": 0.6, "pinspacing": 1.8, "leadlen": 0.8}
-
-
-def terminal(drawing, label, loc):
-    drawing += elm.Dot(open=True).label(label, loc=loc, ofst=0.25)
-
 
 with schemdraw.Drawing(file=OUT, show=False) as d:
     d.config(unit=2.5, fontsize=10)
@@ -57,15 +49,14 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     rx_end = d.here
 
     # ---- Pro Micro ----
-    pm = elm.Ic(
-        pins=[
-            elm.IcPin(name="RX0", pin="0", side="left", slot="2/2"),
-            elm.IcPin(name="D4", pin="4", side="right", slot="2/2"),
-            elm.IcPin(name="VCC", side="top"),
-            elm.IcPin(name="GND", side="bottom"),
-        ],
-        **IC,
-    ).label("Pro Micro\nATmega32U4", loc="center", fontsize=10)
+    pm = promicro(
+        [
+            ("RX0", "left", "2/2"),
+            ("D4", "right", "2/2"),
+            ("VCC", "top", None),
+            ("GND", "bottom", None),
+        ]
+    )
     d += pm.anchor("RX0").at(rx_end)
     d += elm.Line().at(pm.VCC).up(0.6)
     d += elm.Vdd().label("+5 V", loc="top")

@@ -1,6 +1,0 @@
-Source: https://github.com/sparkfun/Fritzing_Parts/blob/main/products/12640_sfe_pro_micro.fzpz
-License: CC BY-SA 4.0 (SparkFun hardware files).
-
-fzgen.promicro embeds it in the sketches with two changes: pins are male (the
-original's female pins do not seat in a breadboard) and the moduleId is
-renamed so it does not clash with the upstream part if that is installed.

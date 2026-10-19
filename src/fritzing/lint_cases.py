@@ -5,8 +5,8 @@ python3 lint_cases.py <Fritzing binary> <dir with gen.py output>
 
 import sys
 
-from fzgen.linttest import move_wire_end, run, shift_instance
-from fzgen.part import P
+from mcubench.fritzing.linttest import move_wire_end, run, shift_instance
+from mcubench.fritzing.part import P
 
 CASES = [
     (
