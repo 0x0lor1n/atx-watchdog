@@ -19,7 +19,7 @@ OUT = sys.argv[1]
 with schemdraw.Drawing(file=OUT, show=False) as d:
     d.config(unit=2.5, fontsize=10)
 
-    # ---- COM1 header (only the two pins we use) ----
+    # JCOM1: only the two pins we use.
     d.here = (0, 0)
     terminal(d, "JCOM1 pin 3\nSOUT  ±12 V", "left")
     d.here = (0, -5.0)
@@ -27,7 +27,7 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     d += elm.Line().at((0, -5.0)).right(1.0)
     d += elm.Ground()
 
-    # ---- inverter: RS-232 -> TTL, idle high ----
+    # RS-232 -> TTL inverter, idle high.
     d += elm.Resistor().at((0, 0)).right().label("R1 10k", loc="top")
     base = d.here
     d += elm.Dot()
@@ -48,7 +48,6 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     d += elm.Line().at(rx).right(3.0)
     rx_end = d.here
 
-    # ---- Pro Micro ----
     pm = promicro(
         [
             ("RX0", "left", "2/2"),
@@ -64,7 +63,6 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     d += elm.Ground()
     d += elm.Label().at((pm.GND[0], pm.GND[1] - 1.9)).label("USB: flashing only, never with 5VSB", fontsize=9)
 
-    # ---- Waveshare relay board ----
     d += elm.Line().at(pm.D4).right(2.0)
     in1 = d.here
     relay = elm.Ic(
@@ -83,7 +81,7 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     d += elm.Line().at(relay["GND"]).down(0.6)
     d += elm.Ground()
 
-    # ---- JFP1 power switch pins, case button stays in parallel ----
+    # JFP1 PWR SW; the case button stays in parallel.
     d += elm.Line().at(relay.COM).right(2.5)
     com = d.here
     d += elm.Dot()
@@ -96,7 +94,6 @@ with schemdraw.Drawing(file=OUT, show=False) as d:
     terminal(d, "JFP1 pin 8\nPWR GND", "right")
     d += elm.Button().at(com).to(no).label("case\nPWR SW", loc="left", ofst=0.3)
 
-    # ---- note ----
     d += (
         elm.Label()
         .at((0, -7.5))

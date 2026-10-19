@@ -94,7 +94,8 @@ see `module.nix` for the options.
 **Generated, linted breadboards.** `src/fritzing/gen.py` places parts by
 "this pin goes into that hole", using hole and pin coordinates from the
 parts' own SVGs, and traces the resulting nets through the breadboard
-strips against the schematic. Then `fritzing-lint` ([mcu-bench](https://github.com/0x0lor1n/mcu-bench)) re-reads what
+strips against the schematic. Then `fritzing-lint`
+([mcu-bench](https://github.com/0x0lor1n/mcu-bench)) re-reads what
 Fritzing actually rendered, so a pin that drifted off its hole or a wire on
 the wrong row fails `nix flake check` instead of the bench.
 
@@ -137,6 +138,12 @@ errors, caught on the bench.
 - Guessed the relay board's channel and terminal order (actually CH3, CH2,
   CH1 and NO, COM, NC) and drew it as fact. Unknowns are now measured on
   the part first.
+
+## Bench worklog
+
+For the curious: [docs/BENCH.md](docs/BENCH.md) (in Russian) is the
+checklist the proof of concept was built and debugged with, step by step:
+parts, wiring, the checks at each stage and what to look at when it fails.
 
 ## License
 
